@@ -75,4 +75,16 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+const getMe = async (req, res) => {
+  try {
+    const { firstname, lastname, email } = req.user; // req.user is populated by auth middleware
+    res.status(200).json({ firstname, lastname, email });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error fetching user data" });
+  }
+};
+
+module.exports = {
+  registerUser, loginUser, getMe 
+};

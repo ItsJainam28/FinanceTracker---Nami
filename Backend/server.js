@@ -8,6 +8,11 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const { protect } = require('./middleware/authMiddleware');
+const budgetRoutes = require('./routes/budgetRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+
 
 // Load environment variables
 dotenv.config();
@@ -22,14 +27,18 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Body parser for JSON
 
-// Routes (later import routes modularly)
+// Routes (API Endpoints)
 app.get('/', (req, res) => {
   res.send('Finance Tracker API is running 🚀');
 });
-
 // Inside app middlewares
 app.use('/api/auth', authRoutes);
-
+// Budget Routes
+app.use('/api/budgets',budgetRoutes);
+// Expense Routes
+app.use('/api/expenses', expenseRoutes);
+// Category Routes
+app.use('/api/categories', categoryRoutes);
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT} 🔥`));
