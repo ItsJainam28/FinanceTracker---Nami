@@ -29,15 +29,27 @@ const createBudget = async (req, res) => {
 };
 
 // @desc    Get all budgets for current user
+// GET /api/budgets?show=all OR /api/budgets
 const getBudgets = async (req, res) => {
   try {
-    const budgets = await Budget.find({ userId: req.user._id }).sort({ startDate: -1 });
+    const showAll = req.query.show === "all";
+
+    const query = {
+      userId: req.user._id,
+    };
+
+    if (!showAll) {
+      const now = new Date();
+      query.endDate = { $gte: now }; // only show current or future
+    }
+
+    const budgets = await Budget.find(query);
     res.status(200).json(budgets);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // @desc    Get single budget by ID
 const getBudgetById = async (req, res) => {

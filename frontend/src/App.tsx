@@ -3,6 +3,10 @@ import LoginPage from './pages/Auth/LoginPage';
 import SignupPage from './pages/Auth/SignupPage';
 import DashboardPage from "@/pages/Dashboard/DashboardPage";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
+import BudgetsPage from './pages/Budgets/BudgetsPage';
+import ExpensesPage from './pages/Expenses/ExpensesPage';
+import CategoriesPage from './pages/Categories/CategoriesPage';
+import ScheduledExpensesPage from './pages/ScheduledExpenses/ScheduledExpensesPage';
 function App() {
   return (
     <Router>
@@ -15,6 +19,38 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets"
+          element={
+            <ProtectedRoute>
+              <BudgetsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/expenses"
+          element={
+            <ProtectedRoute>
+              <ExpensesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/categories"
+          element={
+            <ProtectedRoute>
+              <CategoriesPage />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/scheduled-expenses"
+          element={
+            <ProtectedRoute>
+              <ScheduledExpensesPage />
             </ProtectedRoute>
           }
         />

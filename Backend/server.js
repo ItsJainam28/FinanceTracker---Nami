@@ -12,7 +12,7 @@ const { protect } = require('./middleware/authMiddleware');
 const budgetRoutes = require('./routes/budgetRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-
+const recurringExpenseRoutes = require("./routes/recurringExpenseRoutes.js");
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +39,8 @@ app.use('/api/budgets',budgetRoutes);
 app.use('/api/expenses', expenseRoutes);
 // Category Routes
 app.use('/api/categories', categoryRoutes);
+// Recurring Expense Routes
+app.use("/api/recurring-expenses", recurringExpenseRoutes);
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT} 🔥`));
