@@ -1,94 +1,156 @@
+/* src/pages/DashboardPage.tsx */
 import { useEffect, useState } from "react";
 import api from "@/api/axiosInstance";
 import Navbar from "@/components/common/Navbar";
-import { useNavigate } from "react-router-dom";
 
-interface User {
-  firstname: string;
-  lastname: string;
-  email: string;
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Line, Pie, Bar } from "react-chartjs-2";
+import { Chart, registerables } from "chart.js";
+Chart.register(...registerables);
+
+/* ──────────────────────────────── TYPES */
+interface Analytics {
+  totalSpending: number;
+  topCategories: { _id: string; total: number }[];
+  dailyTrend: { _id: string; total: number }[];
+  budgetVsSpending: { category: string; budgetAmount: number; spent: number }[];
+  largestExpenses: { name: string; amount: number }[];
 }
 
-interface Budget {
-  _id: string;
-  name: string;
-  amount: number;
-  startDate: string;
-  endDate: string;
-}
-
-interface Expense {
-  _id: string;
-  name: string;
-  amount: number;
-  date: string;
-}
-
-interface Category {
-  _id: string;
-  name: string;
-}
-
-
+/* ──────────────────────────────── COMPONENT */
 export default function DashboardPage() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const navigate = useNavigate();
-  
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [counts, setCounts] = useState({ budgets: 0, expenses: 0, categories: 0 });
+
+  /* fetch analytics + quick counts */
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [budgetsRes, expensesRes, categoriesRes] = await Promise.all([
-          api.get("/budgets"),
-          api.get("/expenses"),
-          api.get("/categories"),
-        ]);
+    (async () => {
+      const [anaRes, budRes, expRes, catRes] = await Promise.all([
+        api.get("/analytics/summary"),
+        api.get("/budgets"),
+        api.get("/expenses"),
+        api.get("/categories"),
+      ]);
+      setAnalytics(anaRes.data);
+      setCounts({
+        budgets: budRes.data.length,
+        expenses: expRes.data.length,
+        categories: catRes.data.length,
+      });
+    })();
+  }, []);
 
-        setBudgets(budgetsRes.data);
-        setExpenses(expensesRes.data);
-        setCategories(categoriesRes.data);
+  if (!analytics) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
 
-      } catch (error) {
-        console.error(error);
-        alert("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        navigate("/login");
-      }
-    };
+  /* chart data helpers */
+  const dailyLine = {
+    labels: analytics.dailyTrend.map((d) => d._id),
+    datasets: [
+      {
+        label: "Daily Spend",
+        data: analytics.dailyTrend.map((d) => d.total),
+        fill: true,
+        backgroundColor: "rgba(14,165,233,0.15)",
+        borderColor: "#0ea5e9",
+        tension: 0.3,
+      },
+    ],
+  };
 
-    fetchData();
-  }, [navigate]);
+  const categoryPie = {
+    labels: analytics.topCategories.map((c) => c._id || "Uncategorised"),
+    datasets: [
+      {
+        data: analytics.topCategories.map((c) => c.total),
+        backgroundColor: ["#f87171", "#fb923c", "#facc15", "#4ade80", "#38bdf8"],
+      },
+    ],
+  };
+
+  const budgetBar = {
+    labels: analytics.budgetVsSpending.map((b) => b.category || "No Cat"),
+    datasets: [
+      {
+        label: "Budgeted",
+        data: analytics.budgetVsSpending.map((b) => b.budgetAmount),
+        backgroundColor: "#22c55e",
+      },
+      {
+        label: "Spent",
+        data: analytics.budgetVsSpending.map((b) => b.spent),
+        backgroundColor: "#ef4444",
+      },
+    ],
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+        {/* Welcome banner */}
+        <div className="text-2xl font-semibold">Welcome back! 🎉</div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          {/* Total Budgets */}
-          <div className="bg-white shadow-md rounded-lg p-6 text-center">
-            <h2 className="text-xl font-semibold">Total Budgets</h2>
-            <p className="text-4xl font-bold mt-4">{budgets.length}</p>
-          </div>
-
-          {/* Total Expenses */}
-          <div className="bg-white shadow-md rounded-lg p-6 text-center">
-            <h2 className="text-xl font-semibold">Total Expenses</h2>
-            <p className="text-4xl font-bold mt-4">{expenses.length}</p>
-          </div>
-
-          {/* Total Categories */}
-          <div className="bg-white shadow-md rounded-lg p-6 text-center">
-            <h2 className="text-xl font-semibold">Total Categories</h2>
-            <p className="text-4xl font-bold mt-4">{categories.length}</p>
-          </div>
-
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader><CardTitle>Total Budgets</CardTitle></CardHeader>
+            <CardContent className="text-3xl font-bold">{counts.budgets}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Total Expenses</CardTitle></CardHeader>
+            <CardContent className="text-3xl font-bold">{counts.expenses}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Categories</CardTitle></CardHeader>
+            <CardContent className="text-3xl font-bold">{counts.categories}</CardContent>
+          </Card>
         </div>
-      </div>
+
+        {/* Total spending number */}
+        <Card>
+          <CardHeader><CardTitle>This-month spending</CardTitle></CardHeader>
+          <CardContent className="text-4xl font-extrabold text-emerald-600">
+            ${analytics.totalSpending.toFixed(2)}
+          </CardContent>
+        </Card>
+
+        {/* Charts grid */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Daily trend */}
+          <Card>
+            <CardHeader><CardTitle>Daily trend</CardTitle></CardHeader>
+            <CardContent><Line data={dailyLine} /></CardContent>
+          </Card>
+
+          {/* Category pie */}
+          <Card>
+            <CardHeader><CardTitle>Top categories</CardTitle></CardHeader>
+            <CardContent><Pie data={categoryPie} /></CardContent>
+          </Card>
+
+          {/* Budget vs spend bar (spans two cols) */}
+          <Card className="lg:col-span-2">
+            <CardHeader><CardTitle>Budget vs Spend</CardTitle></CardHeader>
+            <CardContent><Bar data={budgetBar} /></CardContent>
+          </Card>
+        </div>
+
+        {/* Largest expenses list */}
+        <Card>
+          <CardHeader><CardTitle>Largest expenses this month</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="divide-y">
+              {analytics.largestExpenses.map((e, i) => (
+                <li key={i} className="flex justify-between py-2">
+                  <span>{e.name || "Unnamed"}</span>
+                  <span className="font-medium">${e.amount.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }

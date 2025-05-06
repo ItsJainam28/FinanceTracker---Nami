@@ -2,13 +2,13 @@ const RecurringExpense = require('../models/recurringExpense.js');
 
 const createRecurringExpense = async (req, res) => {
   try {
-    const { name, amount, categoryId, budgetId, startDate, endDate } = req.body;
+    const { name, amount, categoryId, startDate, endDate } = req.body;
     const recurring = new RecurringExpense({
       userId: req.user._id,
       name,
       amount,
       categoryId: categoryId || null,
-      budgetId: budgetId || null,
+      budgetId: null,
       startDate,
       endDate: endDate || null,
       nextTriggerDate: new Date(startDate),

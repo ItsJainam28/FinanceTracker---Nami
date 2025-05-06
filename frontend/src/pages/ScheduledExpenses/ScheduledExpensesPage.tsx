@@ -2,15 +2,23 @@ import { useEffect, useState } from "react";
 import api from "@/api/axiosInstance";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import Navbar from "@/components/common/Navbar";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import EditScheduledExpenseModal from "@/components/scheduled/EditScheduledExpenseModal";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
+/*──────── Types */
 interface ScheduledExpense {
   _id: string;
   name: string;
   amount: number;
-  categoryId?: string;
-  budgetId?: string;
+  categoryId: string;
   startDate: string;
   endDate?: string;
   frequency: string;
@@ -23,224 +31,153 @@ interface Category {
   name: string;
 }
 
-interface Budget {
-  _id: string;
-  name: string;
-}
-
+/*──────── Component */
 export default function ScheduledExpensesPage() {
+  /* state */
   const [expenses, setExpenses] = useState<ScheduledExpense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [editing, setEditing] = useState<ScheduledExpense | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editingExpense, setEditingExpense] = useState<ScheduledExpense | null>(
-    null
-  );
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
+  /* form state */
   const [form, setForm] = useState({
     name: "",
     amount: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     categoryId: "",
-    budgetId: "",
     isActive: true,
   });
 
+  /* fetch data */
   const fetchAll = async () => {
-    try {
-      const [expRes, catRes, budRes] = await Promise.all([
-        api.get("/recurring-expenses"),
-        api.get("/categories"),
-        api.get("/budgets"),
-      ]);
-      setExpenses(expRes.data);
-      setCategories(catRes.data);
-      setBudgets(budRes.data);
-    } catch (err) {
-      console.error(err);
-    }
+    const [expRes, catRes] = await Promise.all([
+      api.get("/recurring-expenses"),
+      api.get("/categories"),
+    ]);
+    setExpenses(expRes.data);
+    setCategories(catRes.data);
   };
-
   useEffect(() => {
     fetchAll();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    if (type === "checkbox") {
-      setForm((prev) => ({
-        ...prev,
-        [name]: (e.target as HTMLInputElement).checked,
-      }));
-    } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+  /* helpers */
+  const catMap = Object.fromEntries(categories.map((c) => [c._id, c.name]));
+
+  /* form change */
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setForm((p) => ({
+      ...p,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
+  /* submit */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await api.post("/recurring-expenses", {
-        ...form,
-        amount: Number(form.amount),
-        endDate: form.endDate || null,
-      });
-      setForm({
-        name: "",
-        amount: "",
-        startDate: new Date().toISOString().split("T")[0],
-        endDate: "",
-        categoryId: "",
-        budgetId: "",
-        isActive: true,
-      });
-      fetchAll();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add scheduled expense");
-    }
+    await api.post("/recurring-expenses", {
+      ...form,
+      amount: Number(form.amount),
+      endDate: form.endDate || null,
+    });
+    setForm((p) => ({
+      ...p,
+      name: "",
+      amount: "",
+      categoryId: "",
+      isActive: true,
+    }));
+    fetchAll();
   };
 
+  /* delete */
   const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/recurring-expenses/${id}`);
-      fetchAll();
-    } catch (err) {
-      console.error(err);
-    }
+    await api.delete(`/recurring-expenses/${id}`);
+    fetchAll();
   };
 
+  /*──────── JSX */
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Navbar />
       <div className="max-w-5xl mx-auto py-10 px-4">
         <h1 className="text-3xl font-bold mb-6">Scheduled Expenses</h1>
 
-        {/* Form */}
+        {/* Add form */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow space-y-4 mb-10"
         >
           <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Expense Name
-              </label>
-              <Input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="e.g. Netflix, Gym"
-                required
-              />
-            </div>
+            <Input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Expense name"
+              required
+            />
+            <Input
+              type="number"
+              name="amount"
+              value={form.amount}
+              onChange={handleChange}
+              placeholder="Amount"
+              required
+            />
+            <Input
+              type="date"
+              name="startDate"
+              value={form.startDate}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              type="date"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleChange}
+            />
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Amount ($)
-              </label>
-              <Input
-                type="number"
-                name="amount"
-                value={form.amount}
-                onChange={handleChange}
-                placeholder="e.g. 15.99"
-                required
-              />
-            </div>
+            {/* category dropdown */}
+            <Select
+              value={form.categoryId}
+              onValueChange={(val) =>
+                setForm((p) => ({ ...p, categoryId: val }))
+              }
+            >
+              {/* Trigger: add bg‑white + border so it looks like the other inputs */}
+              <SelectTrigger className="bg-white border border-gray-300 rounded px-2 py-2">
+                <SelectValue placeholder="Select category…" />
+              </SelectTrigger>
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Start Date
-              </label>
-              <Input
-                type="date"
-                name="startDate"
-                value={form.startDate}
-                onChange={handleChange}
-                required
-              />
-              <p className="text-xs text-gray-500">
-                This is when the auto-expense starts.
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                End Date (optional)
-              </label>
-              <Input
-                type="date"
-                name="endDate"
-                value={form.endDate}
-                onChange={handleChange}
-              />
-              <p className="text-xs text-gray-500">
-                Leave blank to continue indefinitely.
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">Category</label>
-              <select
-                name="categoryId"
-                value={form.categoryId}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 rounded text-sm"
-              >
-                <option value="">Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
+              {/* Content (dropdown panel): add bg‑white */}
+              <SelectContent className="bg-white border border-gray-200 shadow-md">
+                {categories.map((c) => (
+                  <SelectItem key={c._id} value={c._id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">
-                Assign to Budget (optional)
-              </label>
-              <select
-                name="budgetId"
-                value={form.budgetId}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 rounded text-sm"
-              >
-                <option value="">No Budget</option>
-                {budgets.map((b) => (
-                  <option key={b._id} value={b._id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
               name="isActive"
               checked={form.isActive}
               onChange={handleChange}
             />
-            <label className="text-sm">Enable Auto-Payment</label>
-          </div>
+            Enable auto‑payment
+          </label>
 
-          <Button type="submit" className="mt-2">
-            Add Scheduled Expense
-          </Button>
+          <Button type="submit">Add Scheduled Expense</Button>
         </form>
 
-        {/* Table */}
+        {/* table */}
         <div className="overflow-x-auto bg-white rounded shadow">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-gray-100 border-b">
@@ -248,7 +185,8 @@ export default function ScheduledExpensesPage() {
                 <th className="px-4 py-2">Name</th>
                 <th className="px-4 py-2">Amount</th>
                 <th className="px-4 py-2">Start</th>
-                <th className="px-4 py-2">Next Trigger</th>
+                <th className="px-4 py-2">Next Trigger</th>
+                <th className="px-4 py-2">Category</th>
                 <th className="px-4 py-2">Active</th>
                 <th className="px-4 py-2">Actions</th>
               </tr>
@@ -264,18 +202,21 @@ export default function ScheduledExpensesPage() {
                   <td className="px-4 py-2">
                     {new Date(e.nextTriggerDate).toLocaleDateString()}
                   </td>
+                  <td className="px-4 py-2">{catMap[e.categoryId]}</td>
                   <td className="px-4 py-2">{e.isActive ? "Yes" : "No"}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-2 flex gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => setEditingExpense(e)}
+                      size="sm"
+                      onClick={() => setEditing(e)}
                     >
                       Edit
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="destructive"
+                      size="sm"
                       onClick={() => {
-                        setSelectedId(e._id);
+                        setConfirmId(e._id);
                         setConfirmOpen(true);
                       }}
                     >
@@ -288,41 +229,45 @@ export default function ScheduledExpensesPage() {
           </table>
         </div>
 
-        {selectedId && (
+        {/* Confirm */}
+        {confirmId && (
           <ConfirmDialog
             open={confirmOpen}
             onClose={() => setConfirmOpen(false)}
-            title="Delete Scheduled Expense"
-            description="This action will stop it from repeating."
+            title="Delete scheduled expense?"
+            description="This will stop it from repeating."
             onConfirm={() => {
-              handleDelete(selectedId);
+              handleDelete(confirmId);
               setConfirmOpen(false);
-              setSelectedId(null);
+              setConfirmId(null);
             }}
           />
         )}
-        {editingExpense && (
-  <EditScheduledExpenseModal
-    open={!!editingExpense}
-    onClose={() => setEditingExpense(null)}
-    initial={{
-      name: editingExpense.name,
-      amount: editingExpense.amount,
-      startDate: editingExpense.startDate.split("T")[0],
-      endDate: editingExpense.endDate?.split("T")[0],
-      categoryId: editingExpense.categoryId || "",
-      budgetId: editingExpense.budgetId || "",
-      isActive: editingExpense.isActive,
-    }}
-    categories={categories}
-    budgets={budgets}
-    onSave={async (updated) => {
-      await api.patch(`/recurring-expenses/${editingExpense._id}`, updated);
-      fetchAll();
-    }}
-  />
-)}
 
+        {/* Edit modal */}
+        {editing && (
+          <EditScheduledExpenseModal
+            open={!!editing}
+            onClose={() => setEditing(null)}
+            initial={{
+              name: editing.name,
+              amount: editing.amount,
+              startDate: editing.startDate.split("T")[0],
+              endDate: editing.endDate?.split("T")[0],
+              categoryId: editing.categoryId,
+              isActive: editing.isActive,
+            }}
+            categories={categories}
+            onSave={async (upd) => {
+              await api.patch(`/recurring-expenses/${editing._id}`, {
+                ...upd,
+                amount: Number(upd.amount),
+              });
+              setEditing(null);
+              fetchAll();
+            }}
+          />
+        )}
       </div>
     </div>
   );

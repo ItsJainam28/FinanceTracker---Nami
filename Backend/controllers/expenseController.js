@@ -5,14 +5,14 @@ const Expense = require('../models/expense');
 // @access  Private
 const createExpense = async (req, res) => {
   try {
-    const { name, amount, date, budgetId, categoryId, isRecurring } = req.body;
+    const { name, amount, date, categoryId, isRecurring } = req.body;
 
     const expense = await Expense.create({
       userId: req.user._id,
       name,
       amount,
       date: date || Date.now(),
-      budgetId: budgetId || null,
+      budgetId: null,
       categoryId: categoryId || null,
       isRecurring: isRecurring || false,
     });
@@ -52,18 +52,17 @@ const getExpenseById = async (req, res) => {
 // @desc    Update an expense
 const updateExpense = async (req, res) => {
   try {
+    const updates = { ...req.body };
+    delete updates.budgetId; // ignore if sent
     const expense = await Expense.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      req.body,
+      updates,
       { new: true }
     );
-    if (!expense) {
-      return res.status(404).json({ error: "Expense not found" });
-    }
-    res.status(200).json(expense);
-  } catch (error) {
-    console.error(error);
-    res.status(400).json({ error: error.message });
+    if (!expense) return res.status(404).json({ error: "Not found" });
+    res.json(expense);
+  } catch {
+    res.status(500).json({ error: "Failed to update expense" });
   }
 };
 
