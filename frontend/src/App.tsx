@@ -1,62 +1,47 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/Auth/LoginPage';
-import SignupPage from './pages/Auth/SignupPage';
+/* src/App.tsx */
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import LoginPage from "@/pages/Auth/LoginPage";
+import SignupPage from "@/pages/Auth/SignupPage";
 import DashboardPage from "@/pages/Dashboard/DashboardPage";
+import BudgetsPage from "@/pages/Budgets/BudgetsPage";
+import ExpensesPage from "@/pages/Expenses/ExpensesPage";
+import CategoriesPage from "@/pages/Categories/CategoriesPage";
+import ScheduledExpensesPage from "@/pages/ScheduledExpenses/ScheduledExpensesPage";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
-import BudgetsPage from './pages/Budgets/BudgetsPage';
-import ExpensesPage from './pages/Expenses/ExpensesPage';
-import CategoriesPage from './pages/Categories/CategoriesPage';
-import ScheduledExpensesPage from './pages/ScheduledExpenses/ScheduledExpensesPage';
-function App() {
+import AppShell from "@/layouts/AppShell";
+
+export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        {/* public */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+
+        {/* protected area wrapped once */}
         <Route
-          path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <AppShell />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/budgets"
-          element={
-            <ProtectedRoute>
-              <BudgetsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/expenses"
-          element={
-            <ProtectedRoute>
-              <ExpensesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/categories"
-          element={
-            <ProtectedRoute>
-              <CategoriesPage />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/budgets" element={<BudgetsPage />} />
+          <Route path="/expenses" element={<ExpensesPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
           <Route
-          path="/scheduled-expenses"
-          element={
-            <ProtectedRoute>
-              <ScheduledExpensesPage />
-            </ProtectedRoute>
-          }
-        />
+            path="/scheduled-expenses"
+            element={<ScheduledExpensesPage />}
+          />
+        </Route>
       </Routes>
     </Router>
   );
 }
-
-export default App;

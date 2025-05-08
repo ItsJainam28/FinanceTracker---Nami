@@ -46,6 +46,9 @@ const formatCurrency = (n: number) =>
   }).format(n);
 
 /* ───────── Component ───────── */
+// src/components/budget/BudgetStatsModal.tsx
+// ...imports remain the same...
+
 export default function BudgetStatsModal({
   open,
   onClose,
@@ -58,7 +61,6 @@ export default function BudgetStatsModal({
   const current = timeline[idx] || budget;
   const [activeTab, setActiveTab] = useState("overview");
 
-  /* Default stats while loading */
   const [stats, setStats] = useState<Stats>({
     amount: current.amount,
     spent: 0,
@@ -68,14 +70,13 @@ export default function BudgetStatsModal({
     historicalData: [],
   });
 
-  /* Fetch live stats */
   useEffect(() => {
     (async () => {
       try {
         const { data } = await api.get(
           `/budgets/${budget._id}/month-summary?month=${current.month}&year=${current.year}`
         );
-        setStats(data); // <-- live backend payload
+        setStats(data);
       } catch (err) {
         console.error(err);
         setStats((p) => ({ ...p, spent: 0, remaining: p.amount, percent: 0 }));
@@ -83,88 +84,71 @@ export default function BudgetStatsModal({
     })();
   }, [current.month, current.year, budget._id]);
 
-  /* Nav helpers */
   const step = (d: -1 | 1) =>
     setIdx((i) => Math.min(Math.max(i + d, 0), timeline.length - 1));
   const prevDisabled = idx === 0;
   const nextDisabled = idx === timeline.length - 1;
 
-  /* ───────── UI ───────── */
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 w-[95%] max-w-4xl h-[90vh] max-h-[800px] -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="p-6 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Budget Analysis
-            </h2>
-            <div className="text-lg font-medium text-gray-700">
+        <Dialog.Content className="fixed top-1/2 left-1/2 w-[95%] max-w-4xl h-[90vh] max-h-[800px] -translate-x-1/2 -translate-y-1/2 bg-black text-white rounded-xl shadow-xl overflow-hidden flex flex-col border border-white/20">
+          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black">
+            <h2 className="text-2xl font-bold">Budget Analysis</h2>
+            <div className="text-lg font-medium text-gray-300">
               {monthName(current.month)} {current.year}
             </div>
           </div>
-
-          {/* Content */}
+         
           <div className="flex-1 overflow-y-auto p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="overview">
-                  <PieChartIcon className="h-4 w-4 mr-1" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="categories">
-                  <BarChartIcon className="h-4 w-4 mr-1" />
-                  Categories
-                </TabsTrigger>
-                <TabsTrigger value="history">
-                  <TrendingUpIcon className="h-4 w-4 mr-1" />
-                  History
-                </TabsTrigger>
-              </TabsList>
+         
+            <Tabs value={activeTab} onValueChange={setActiveTab} border-white>
+            <div className="border-white">
+            <TabsList className="grid grid-cols-3 mb-6 bg-gray/40 border-white rounded overflow-hidden">
+  <TabsTrigger
+    value="overview"
+    className="data-[state=active]:bg-white data-[state=active]:text-black transition-colors "
+  >
+    Overview
+  </TabsTrigger>
+  <TabsTrigger
+    value="categories"
+    className="data-[state=active]:bg-white data-[state=active]:text-black transition-colors"
+  >
+    Categories
+  </TabsTrigger>
+  <TabsTrigger
+    value="history"
+    className="data-[state=active]:bg-white data-[state=active]:text-black transition-colors"
+  >
+    History
+  </TabsTrigger>
+</TabsList>
+</div>
 
-              {/* Overview */}
+
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid md:grid-cols-3 gap-4">
                   {[
-                    {
-                      title: "Budgeted",
-                      color: "blue-500",
-                      value: stats.amount,
-                    },
-                    { title: "Spent", color: "rose-500", value: stats.spent },
-                    {
-                      title: "Remaining",
-                      color: "emerald-500",
-                      value: stats.remaining,
-                    },
-                  ].map((c) => (
-                    <Card
-                      key={c.title}
-                      className={`border-l-4 border-l-${c.color}`}
-                    >
+                    { title: "Budgeted", value: stats.amount, color: "border-blue-500" },
+                    { title: "Spent", value: stats.spent, color: "border-rose-500" },
+                    { title: "Remaining", value: stats.remaining, color: "border-emerald-500" },
+                  ].map((item) => (
+                    <Card key={item.title} className={`bg-black ${item.color} border-l-4`}>
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm text-gray-500">
-                          {c.title}
-                        </CardTitle>
+                        <CardTitle className="text-sm text-gray-400">{item.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p
-                          className={cn(
-                            "text-3xl font-bold",
-                            c.title === "Spent" && "text-rose-600",
-                            c.title === "Remaining" && "text-emerald-600"
-                          )}
-                        >
-                          {formatCurrency(c.value)}
+                        <p className="text-3xl font-bold">
+                          {formatCurrency(item.value)}
                         </p>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
 
-                {/* Progress */}
-                <Card>
+                <Card className="bg-black">
                   <CardHeader>
                     <CardTitle>Budget Usage</CardTitle>
                   </CardHeader>
@@ -175,55 +159,46 @@ export default function BudgetStatsModal({
                     </div>
                     <Progress
                       value={stats.percent}
-                      className="h-4 bg-gray-100 rounded-full"
+                      className="h-4 bg-white/10"
                       indicatorClassName={
                         stats.percent < 70
                           ? "bg-emerald-500"
                           : stats.percent <= 100
-                          ? "bg-amber-500"
-                          : "bg-rose-600"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                       }
                     />
-
-                    {/* Quick metrics */}
                     <div className="grid grid-cols-3 gap-4 pt-2">
-                      <div className="metric">
-                        <p className="text-sm text-gray-500">Daily Budget</p>
+                      <div>
+                        <p className="text-sm text-gray-400">Daily Budget</p>
+                        <p className="font-bold">{formatCurrency(stats.amount / 30)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Daily Spent</p>
                         <p className="font-bold">
-                          {formatCurrency(stats.amount / 30)}
+                          {formatCurrency(stats.spent / Math.max(new Date().getDate(), 1))}
                         </p>
                       </div>
-                      <div className="metric">
-                        <p className="text-sm text-gray-500">Daily Spent</p>
-                        <p className="font-bold">
-                          {formatCurrency(
-                            stats.spent / Math.max(new Date().getDate(), 1)
-                          )}
-                        </p>
-                      </div>
-                      <div className="metric">
-                        <p className="text-sm text-gray-500">
-                          Days Remaining
-                        </p>
+                      <div>
+                        <p className="text-sm text-gray-400">Days Remaining</p>
                         <p className="font-bold">
                           {30 - Math.min(new Date().getDate(), 30)}
                         </p>
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="text-sm text-gray-500 border-t pt-4">
+                  <CardFooter className="text-sm text-gray-400 border-t pt-4">
                     {stats.percent > 90
                       ? "You're close to your budget limit."
                       : stats.percent > 70
-                      ? "Your spending is within budget but monitor your expenses."
+                      ? "You're within budget, but keep an eye on spending."
                       : "You're doing great! Spending is well under budget."}
                   </CardFooter>
                 </Card>
               </TabsContent>
 
-              {/* Categories */}
               <TabsContent value="categories" className="space-y-6">
-                <Card>
+                <Card className="bg-black">
                   <CardHeader>
                     <CardTitle>Category Breakdown</CardTitle>
                   </CardHeader>
@@ -235,11 +210,10 @@ export default function BudgetStatsModal({
                           <div className="flex justify-between text-sm font-medium">
                             <span>{cat.name}</span>
                             <span>
-                              {formatCurrency(cat.spent)} /{" "}
-                              {formatCurrency(cat.amount)}
+                              {formatCurrency(cat.spent)} / {formatCurrency(cat.amount)}
                             </span>
                           </div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                             <div
                               style={{ width: `${Math.min(pct, 100)}%` }}
                               className={cn(
@@ -247,8 +221,8 @@ export default function BudgetStatsModal({
                                 pct < 70
                                   ? "bg-emerald-500"
                                   : pct <= 100
-                                  ? "bg-amber-500"
-                                  : "bg-rose-600"
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                               )}
                             />
                           </div>
@@ -259,27 +233,24 @@ export default function BudgetStatsModal({
                 </Card>
               </TabsContent>
 
-              {/* History */}
               <TabsContent value="history" className="space-y-6">
-                <Card>
+                <Card className="bg-black">
                   <CardHeader>
                     <CardTitle>Spending History</CardTitle>
                   </CardHeader>
                   <CardContent className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={stats.historicalData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
+                      <BarChart data={stats.historicalData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                        <XAxis dataKey="month" stroke="#aaa" />
+                        <YAxis stroke="#aaa" />
                         <Tooltip
+                          contentStyle={{ backgroundColor: "#111", border: "1px solid #555", color: "#fff" }}
                           formatter={(v: number) => formatCurrency(v)}
                           labelFormatter={(l) => `Period: ${l}`}
                         />
-                        <Bar dataKey="budget" fill="#94a3b8" name="Budget" />
-                        <Bar dataKey="spent"  fill="#3b82f6" name="Spent" />
+                        <Bar dataKey="budget" fill="#6b7280" name="Budget" />
+                        <Bar dataKey="spent" fill="#3b82f6" name="Spent" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -288,37 +259,36 @@ export default function BudgetStatsModal({
             </Tabs>
           </div>
 
-          {/* Footer Nav + Close */}
-          <div className="p-4 border-t flex items-center justify-between bg-gray-50">
+          <div className="p-4 border-t border-white/10 flex items-center justify-between bg-black">
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => step(-1)}
                 disabled={prevDisabled}
+                className="border-white/20 text-white"
               >
                 <ArrowLeftIcon className="h-3 w-3 mr-1" />
                 Prev
               </Button>
 
-              {/* Month quick picker */}
               <Popover.Root>
                 <Popover.Trigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="border-white/20 text-white">
                     <CalendarIcon className="h-3 w-3 mr-1" />
                     Choose Month
                   </Button>
                 </Popover.Trigger>
                 <Popover.Portal>
-                  <Popover.Content className="bg-white border rounded-md p-4 shadow-md z-60 w-64">
+                  <Popover.Content className="bg-black text-white border border-white/20 rounded-md p-4 shadow-md z-60 w-64">
                     <div className="space-y-1 max-h-64 overflow-y-auto">
                       {timeline.map((b, i) => (
                         <button
                           key={b._id}
                           onClick={() => setIdx(i)}
                           className={cn(
-                            "w-full text-left rounded px-3 py-2 hover:bg-gray-100",
-                            i === idx && "bg-blue-100 text-blue-700 font-medium"
+                            "w-full text-left rounded px-3 py-2 hover:bg-white/10",
+                            i === idx && "bg-white/10 text-white font-medium"
                           )}
                         >
                           {monthName(b.month)} {b.year}
@@ -335,13 +305,14 @@ export default function BudgetStatsModal({
                 size="sm"
                 onClick={() => step(1)}
                 disabled={nextDisabled}
+                className="border-white/20 text-white"
               >
                 Next <ArrowRightIcon className="h-3 w-3 ml-1" />
               </Button>
             </div>
 
             <Dialog.Close asChild>
-              <Button>Close</Button>
+              <Button className="bg-white text-black">Close</Button>
             </Dialog.Close>
           </div>
         </Dialog.Content>

@@ -89,7 +89,7 @@ export default function ExpensesPage() {
   /* ───────────── UI ───────────── */
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
-      <Navbar />
+     
 
       <div className="max-w-5xl mx-auto py-10 px-4">
         <h1 className="text-3xl font-bold mb-6">Expenses</h1>

@@ -1,14 +1,21 @@
-// src/pages/BudgetPage.tsx
+// New stylized BudgetPage.tsx with card layout, modal form, progress bar, and animations
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import Navbar from "@/components/common/Navbar";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 import api from "@/api/axiosInstance";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import EditBudgetModal from "@/components/budget/EditBudgetModal";
-import * as Popover from "@radix-ui/react-popover";
 import BudgetStatsModal from "@/components/budget/BudgetStatsModal";
+import EditBudgetModal from "@/components/budget/EditBudgetModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+
 interface Budget {
   _id: string;
   month: number;
@@ -23,7 +30,19 @@ interface Category {
   name: string;
 }
 
+interface Stat {
+  spent: number;
+  percent: number;
+}
+
 export default function BudgetPage() {
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [statsMap, setStatsMap] = useState<Record<string, Stat>>({});
+  const [formOpen, setFormOpen] = useState(false);
+  const [statsBudget, setStatsBudget] = useState<Budget | null>(null);
+  const [editing, setEditing] = useState<Budget | null>(null);
+
   const [form, setForm] = useState({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -31,15 +50,11 @@ export default function BudgetPage() {
     categories: [] as string[],
     isRecurring: true,
   });
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [statsBudget, setStatsBudget] = useState<Budget | null>(null);
-  const [editing, setEditing] = useState<Budget | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [statsTimeline, setStatsTimeline] = useState<Budget[]>([]);
 
-  // Fetch budgets + categories
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const fetchData = async () => {
     try {
       const [budRes, catRes] = await Promise.all([
@@ -48,317 +63,262 @@ export default function BudgetPage() {
       ]);
       setBudgets(budRes.data);
       setCategories(catRes.data);
+
+      const stats: Record<string, Stat> = {};
+      await Promise.all(
+        budRes.data.map(async (b: Budget) => {
+          try {
+            const res = await api.get(
+              `/budgets/${b._id}/month-summary?month=${b.month}&year=${b.year}`
+            );
+            stats[b._id] = {
+              spent: res.data.spent,
+              percent: res.data.percent,
+            };
+          } catch {
+            stats[b._id] = { spent: 0, percent: 0 };
+          }
+        })
+      );
+      setStatsMap(stats);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // helper to generate a list of related budgets
-  const buildTimeline = (base: Budget) => {
-    const sameCats = (a: string[], b: string[]) =>
-      a.length === b.length && a.every((id) => b.includes(id));
-
-    return budgets
-      .filter(
-        (b) =>
-          sameCats(b.categories, base.categories) && // same category set
-          b.isRecurring === base.isRecurring // same recurring flag
-      )
-      .sort((a, b) => a.year - b.year || a.month - b.month); // oldest → newest
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // Handle form changes
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    if (name === "amount") {
-      setForm((p) => ({ ...p, [name]: value }));
-    } else if (type === "checkbox") {
-      setForm((p) => ({
-        ...p,
-        [name]: (e.target as HTMLInputElement).checked,
-      }));
-    } else {
-      setForm((p) => ({ ...p, [name]: Number(value) }));
-    }
-  };
-
-  // Toggle category selection
   const toggleCategory = (id: string) => {
-    setForm((p) => ({
-      ...p,
-      categories: p.categories.includes(id)
-        ? p.categories.filter((c) => c !== id)
-        : [...p.categories, id],
+    setForm((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(id)
+        ? prev.categories.filter((c) => c !== id)
+        : [...prev.categories, id],
     }));
   };
 
-  // Submit create budget
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post("/budgets", {
-        month: form.month,
-        year: form.year,
+        ...form,
         amount: Number(form.amount),
-        categories: form.categories,
-        isRecurring: form.isRecurring,
       });
-      setForm((p) => ({ ...p, amount: "", categories: [], isRecurring: true }));
+      setFormOpen(false);
+      setForm({
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        amount: "",
+        categories: [],
+        isRecurring: true,
+      });
       fetchData();
     } catch (err) {
-      console.error(err);
       alert("Failed to add budget");
     }
   };
 
-  // Delete budget
-  const handleDelete = async (id: string) => {
-    try {
-      await api.delete(`/budgets/${id}`);
-      fetchData();
-    } catch {
-      alert("Failed to delete");
-    }
-  };
+  const monthName = (m: number) =>
+    new Date(0, m - 1).toLocaleString("default", { month: "long" });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <Navbar />
-      <div className="max-w-5xl mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-6">Budgets</h1>
+    <div className="flex-1 min-h-screen bg-black text-white px-6 py-10">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <h1 className="text-3xl font-extrabold">Budgets</h1>
 
-        {/* Add Budget Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded shadow-md mb-10 space-y-4"
-        >
-          <div className="grid sm:grid-cols-2 gap-4">
-            {/* Month */}
-            <div>
-              <label className="text-sm font-medium block mb-1">Month</label>
+        <div className="space-y-4">
+          {budgets.map((b) => (
+            <div
+              key={b._id}
+              className="border border-white/20 rounded-lg p-5 bg-black hover:shadow-xl transition cursor-pointer"
+              onClick={(e) => {
+                if ((e.target as HTMLElement).tagName === "BUTTON") return;
+                setStatsBudget(b);
+              }}
+            >
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-bold">
+                  {b.categories
+                    .map((id) =>
+                      categories.find((c) => c._id === id)?.name ?? "Unknown"
+                    )
+                    .join(" | ") || "All Categories"}
+                </h2>
+                <div className="text-sm text-gray-400">
+                  {monthName(b.month)} {b.year}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <Progress
+                  value={statsMap[b._id]?.percent || 0}
+                  className="h-3 bg-white/10"
+                  indicatorClassName={
+                    statsMap[b._id]?.percent > 100
+                      ? "bg-red-500"
+                      : statsMap[b._id]?.percent > 70
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
+                  }
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  {statsMap[b._id]?.percent?.toFixed(1) || 0}% used — $
+                  {statsMap[b._id]?.spent?.toFixed(2) || 0} spent
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditing(b)}
+                  className="z-10"
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    await api.delete(`/budgets/${b._id}`);
+                    fetchData();
+                  }}
+                  className="z-10"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center">
+          <Button
+            className="bg-white text-black hover:bg-gray-200"
+            onClick={() => setFormOpen(true)}
+          >
+            Add Budget
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="bg-black text-white border border-white/20">
+          <DialogHeader>
+            <DialogTitle>Add Budget</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div className="flex gap-3">
               <select
                 name="month"
                 value={form.month}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 rounded text-sm"
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, month: Number(e.target.value) }))
+                }
+                className="bg-black border border-white/20 p-2 rounded"
               >
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("default", {
-                      month: "long",
-                    })}
+                  <option key={i + 1} value={i + 1} className="text-gray-500">
+                    {monthName(i + 1)}
                   </option>
                 ))}
               </select>
-            </div>
-            {/* Year */}
-            <div>
-              <label className="text-sm font-medium block mb-1">Year</label>
               <select
                 name="year"
                 value={form.year}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 rounded text-sm"
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, year: Number(e.target.value) }))
+                }
+                className="bg-black border border-white/20 p-2 rounded"
               >
-                {/* Last 5 years for example */}
                 {Array.from({ length: 5 }).map((_, i) => {
                   const y = new Date().getFullYear() - (4 - i);
                   return (
-                    <option key={y} value={y}>
+                    <option key={y} value={y} className="text-gray-500">
                       {y}
                     </option>
                   );
                 })}
               </select>
             </div>
-            {/* Amount */}
-            <div>
-              <label className="text-sm font-medium block mb-1">
-                Amount ($)
-              </label>
-              <Input
-                type="number"
-                name="amount"
-                value={form.amount}
-                onChange={handleChange}
-                placeholder="e.g. 500"
-                required
-              />
-            </div>
-            {/* Recurring */}
-            <div className="flex items-center mt-6">
+
+            <Input
+              type="number"
+              name="amount"
+              placeholder="Budget Amount"
+              value={form.amount}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, amount: e.target.value }))
+              }
+              className="bg-black border border-white/20 text-white"
+              required
+            />
+
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={form.isRecurring}
                 onCheckedChange={(c) =>
                   setForm((p) => ({ ...p, isRecurring: !!c }))
                 }
               />
-              <span className="ml-2 text-sm">Repeat every month</span>
+              <span className="text-sm">Recurring</span>
             </div>
 
-            {/* Categories – now a dropdown with checkboxes */}
-            <div className="sm:col-span-2">
-              <label className="text-sm font-medium block mb-1">
-                Categories
-              </label>
-              <Popover.Root>
-                <Popover.Trigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    {form.categories.length
-                      ? form.categories
-                          .map(
-                            (id) => categories.find((c) => c._id === id)?.name
-                          )
-                          .join(", ")
-                      : "Select categories…"}
-                  </Button>
-                </Popover.Trigger>
-
-                <Popover.Portal>
-                  <Popover.Content
-                    className="bg-white border rounded-md shadow-md p-4 w-64"
-                    sideOffset={5}
+            <div>
+              <label className="text-sm mb-1 block">Categories</label>
+              <div className="grid grid-cols-2 gap-2">
+                {categories.map((cat) => (
+                  <label
+                    key={cat._id}
+                    className="flex items-center gap-2 text-sm"
                   >
-                    <div className="space-y-2 max-h-48 overflow-auto">
-                      {categories.map((cat) => (
-                        <label
-                          key={cat._id}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <Checkbox
-                            checked={form.categories.includes(cat._id)}
-                            onCheckedChange={() => toggleCategory(cat._id)}
-                          />
-                          {cat.name}
-                        </label>
-                      ))}
-                    </div>
-
-                    {/* Use Popover.Close instead of calling close() */}
-                    <div className="text-right mt-2">
-                      <Popover.Close asChild>
-                        <Button variant="secondary" size="sm">
-                          Done
-                        </Button>
-                      </Popover.Close>
-                    </div>
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
+                    <Checkbox
+                      checked={form.categories.includes(cat._id)}
+                      onCheckedChange={() => toggleCategory(cat._id)}
+                    />
+                    {cat.name}
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
-          <Button type="submit">Add Budget</Button>
-        </form>
 
-        {/* Budgets Table */}
-        <div className="overflow-x-auto bg-white rounded shadow">
-          <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                <th className="px-4 py-2">Month</th>
-                <th className="px-4 py-2">Year</th>
-                <th className="px-4 py-2">Amount</th>
-                <th className="px-4 py-2">Categories</th>
-                <th className="px-4 py-2">Recurring</th>
-                <th className="px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {budgets.map((b) => (
-                <tr key={b._id} className="border-t">
-                  <td className="px-4 py-2">
-                    {new Date(b.year, b.month - 1).toLocaleString("default", {
-                      month: "short",
-                    })}
-                  </td>
-                  <td className="px-4 py-2">{b.year}</td>
-                  <td className="px-4 py-2">${b.amount.toFixed(2)}</td>
-                  <td className="px-4 py-2">
-                    {b.categories.length ?  b.categories
-        .map(id => categories.find(c => c._id === id)?.name ?? "Unknown")
-        .join(", ") : "All"}
-                  </td>
-                  <td className="px-4 py-2">{b.isRecurring ? "Yes" : "No"}</td>
-                  <td className="px-4 py-2 flex gap-2">
-                    <Button variant="outline" onClick={() => setEditing(b)}>
-                      Edit
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setStatsBudget(b);
-                        setStatsTimeline(buildTimeline(b));
-                      }}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        setSelectedId(b._id);
-                        setConfirmOpen(true);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            <Button
+              type="submit"
+              className="mt-2 bg-white text-black w-full hover:bg-gray-100"
+            >
+              Save Budget
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-        {/* Edit Modal */}
-        {editing && (
-          <EditBudgetModal
-            open={!!editing}
-            onClose={() => setEditing(null)}
-            initial={{
-              month: editing.month,
-              year: editing.year,
-              amount: editing.amount,
-              categories: editing.categories, // <-- array of IDs
-              isRecurring: editing.isRecurring,
-            }}
-            categories={categories} // <-- full list of { _id, name }
-            onSave={async (updated) => {
-              await api.patch(`/budgets/${editing._id}`, updated);
-              setEditing(null);
-              fetchData();
-            }}
-          />
-        )}
+      {statsBudget && (
+        <BudgetStatsModal
+          open={!!statsBudget}
+          onClose={() => setStatsBudget(null)}
+          budget={statsBudget}
+          timeline={budgets
+            .filter(
+              (b) =>
+                JSON.stringify(b.categories.sort()) ===
+                  JSON.stringify(statsBudget.categories.sort()) &&
+                b.isRecurring === statsBudget.isRecurring
+            )
+            .sort((a, b) => a.year - b.year || a.month - b.month)}
+        />
+      )}
 
-        {/* Delete Confirm */}
-        {selectedId && (
-          <ConfirmDialog
-            open={confirmOpen}
-            onClose={() => setConfirmOpen(false)}
-            title="Delete Budget?"
-            description="This will remove this month's budget."
-            onConfirm={() => {
-              handleDelete(selectedId);
-              setConfirmOpen(false);
-              setSelectedId(null);
-            }}
-          />
-        )}
-
-        {statsBudget && (
-          <BudgetStatsModal
-            open={!!statsBudget}
-            onClose={() => setStatsBudget(null)}
-            budget={statsBudget}
-            timeline={statsTimeline} // ← pass timeline array
-          />
-        )}
-      </div>
+      {editing && (
+        <EditBudgetModal
+          open={!!editing}
+          onClose={() => setEditing(null)}
+          initial={editing}
+          categories={categories}
+          onSave={async (updated) => {
+            await api.patch(`/budgets/${editing._id}`, updated);
+            setEditing(null);
+            fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

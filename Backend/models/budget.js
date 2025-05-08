@@ -7,8 +7,13 @@ const budgetSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    recurringBudgetId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RecurringBudget",
+      required: true,
+    },
     month: {
-      type: Number, // 0 = Jan, 11 = Dec
+      type: Number,
       required: true,
     },
     year: {
@@ -26,7 +31,7 @@ const budgetSchema = new mongoose.Schema(
         required: true,
       },
     ],
-    isRecurring: {
+    isArchived: {
       type: Boolean,
       default: false,
     },
@@ -34,6 +39,10 @@ const budgetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-budgetSchema.index({ userId: 1, month: 1, year: 1 }); // Optimize querying by time
+// Prevent duplicate budget per month for same recurringBudget
+budgetSchema.index(
+  { recurringBudgetId: 1, month: 1, year: 1 },
+  { unique: true }
+);
 
 module.exports = mongoose.model("Budget", budgetSchema);
