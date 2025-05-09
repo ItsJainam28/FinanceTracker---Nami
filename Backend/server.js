@@ -14,6 +14,7 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const recurringExpenseRoutes = require("./routes/recurringExpenseRoutes.js");
 const analyticsRoutes = require("./routes/analytics");
+const recurringBudgetRoutes = require('./routes/recurringBudgetRoutes');
 // Load environment variables
 dotenv.config();
 
@@ -43,6 +44,8 @@ app.use('/api/categories', categoryRoutes);
 app.use("/api/recurring-expenses", recurringExpenseRoutes);
 // Analytics Routes
 app.use("/api/analytics", analyticsRoutes);
+// Recurring Budget Routes
+app.use('/api/recurring-budgets', require('./routes/recurringBudgetRoutes'));
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT} 🔥`));

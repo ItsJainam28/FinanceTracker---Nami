@@ -1,213 +1,229 @@
+// controllers/budgetController.js
+
+const RecurringBudget = require("../models/recurringBudget");
 const Budget = require("../models/budget");
 const Expense = require("../models/expense");
-const Category = require("../models/category");
+const mongoose = require("mongoose");
 
-// 1. Create Budget (for selected month/year)
-const createBudget = async (req, res) => {
+// Helper: get start & end of a month
+const getMonthRange = (year, month) => {
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0, 23, 59, 59);
+  return { start, end };
+};
+
+// 1. Timeline of all budgets for a recurring budget
+const getBudgetsForRecurring = async (req, res) => {
   try {
-    const { month, year, amount, categories, isRecurring } = req.body;
+    const recurringId = req.params.id;
+    const budgets = await Budget.find({
+      userId: req.user._id,
+      recurringBudgetId: recurringId,
+    }).sort({ year: 1, month: 1 });
 
-    // Optional: prevent duplicate for same month/year
-    const exists = await Budget.findOne({ userId: req.user._id, month, year, categories });
-    if (exists) {
-      return res.status(400).json({ error: "Budget for this month already exists" });
-    }
+    res.json(budgets);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch budget timeline" });
+  }
+};
 
-    const budget = new Budget({
+// 2. Current month budgets only
+const getCurrentMonthBudgets = async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const budgets = await Budget.find({
       userId: req.user._id,
       month,
       year,
-      amount,
-      categories,
-      isRecurring,
     });
 
-    await budget.save();
-    res.status(201).json(budget);
+    res.json(budgets);
   } catch (err) {
-    console.error("Create budget error:", err);
-    res.status(500).json({ error: "Failed to create budget" });
+    res.status(500).json({ error: "Failed to fetch current budgets" });
   }
 };
 
-// 2. Update Budget by ID
-const updateBudget = async (req, res) => {
+// 3. Archived recurring budgets (past end date or deactivated)
+const getArchivedRecurringBudgets = async (req, res) => {
   try {
-    const updates = req.body;
-    const budget = await Budget.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      updates,
-      { new: true }
-    );
+    const now = new Date();
+    const archived = await RecurringBudget.find({
+      userId: req.user._id,
+      $or: [{ isActive: false }, { endDate: { $lt: now } }],
+    });
 
-    if (!budget) {
-      return res.status(404).json({ error: "Budget not found" });
-    }
-
-    res.status(200).json(budget);
+    res.json(archived);
   } catch (err) {
-    console.error("Update budget error:", err);
-    res.status(500).json({ error: "Failed to update budget" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch archived budgets" });
   }
 };
 
-// 3. Get all budgets
-const getUserBudgets = async (req, res) => {
+// 4. Active recurring budgets with current month's usage
+const getRecurringBudgetsWithCurrentMonthUsage = async (req, res) => {
   try {
-    const budgets = await Budget.find({ userId: req.user._id }).sort({ year: -1, month: -1 });
-    res.status(200).json(budgets);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch budgets" });
-  }
-};
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const userId = req.user._id;
 
-// 4. Get a single budget
-const getSingleBudget = async (req, res) => {
-  try {
-    const budget = await Budget.findOne({ _id: req.params.id, userId: req.user._id });
-
-    if (!budget) {
-      return res.status(404).json({ error: "Budget not found" });
-    }
-
-    res.status(200).json(budget);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch budget" });
-  }
-};
-
-// 5. Delete budget
-const deleteBudget = async (req, res) => {
-  try {
-    const deleted = await Budget.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
-
-    if (!deleted) {
-      return res.status(404).json({ error: "Budget not found" });
-    }
-
-    res.status(200).json({ message: "Budget deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to delete budget" });
-  }
-};
-
-const getBudgetMonthSummary = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const month  = Number(req.query.month);
-    const year   = Number(req.query.year);
-
-    if (!month || !year) {
-      return res.status(400).json({ error: "month & year required" });
-    }
-
-    /* 1 ───────── Load budget */
-    const budget = await Budget.findOne({ _id: id, userId: req.user._id });
-    if (!budget) return res.status(404).json({ error: "Budget not found" });
-
-    const start  = new Date(year, month - 1, 1);
-    const end    = new Date(year, month, 0, 23, 59, 59);
-
-    /* 2 ───────── Basic spend */
-    const spendAgg = await Expense.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          categoryId: { $in: budget.categories },
-          date: { $gte: start, $lte: end },
+    // Get active recurring budgets for the user with start month less than or equal to current month and end month greater than or equal to current month
+    const recurringBudgets = await RecurringBudget.find({
+      userId,
+      isActive: true,
+      $or: [
+        { endYear: null, endMonth: null },
+        {
+          $or: [
+            { endYear: { $gt: currentYear } },
+            { endYear: currentYear, endMonth: { $gte: currentMonth } },
+          ],
         },
-      },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]);
-    const spent = spendAgg[0]?.total || 0;
+      ],
+    }).sort({ createdAt: -1 });
+    console.log("Recurring Budgets:", recurringBudgets);
+    const recurringIds = recurringBudgets.map((r) => r._id);
 
-    const remaining = Math.max(budget.amount - spent, 0);
-    const percent   = Number(((spent / budget.amount) * 100).toFixed(1));
+    const budgets = await Budget.find({
+      userId: req.user._id,
+      recurringBudgetId: { $in: recurringIds },
+      month: currentMonth,
+      year: currentYear,
+    });
 
-    /* 3 ───────── Category breakdown */
-    //   • equal allocation per category (override later if you add custom weights)
-    const catDocs        = await Category.find({ _id: { $in: budget.categories } });
-    const perCatBudget   = budget.amount / budget.categories.length || 0;
-
-    const catSpendAgg = await Expense.aggregate([
-      {
-        $match: {
-          userId: req.user._id,
-          categoryId: { $in: budget.categories },
-          date: { $gte: start, $lte: end },
-        },
-      },
-      { $group: { _id: "$categoryId", total: { $sum: "$amount" } } },
-    ]);
-
-    const spendByCat = Object.fromEntries(
-      catSpendAgg.map((c) => [String(c._id), c.total])
-    );
-
-    const categoryBreakdown = catDocs.map((c) => ({
-      name: c.name,
-      amount: perCatBudget,
-      spent: spendByCat[String(c._id)] || 0,
-    }));
-
-    /* 4 ───────── Historical data (previous 5 months + current) */
-    const MONTHS_BACK = 5;
-    const history = [];
-
-    for (let i = MONTHS_BACK; i >= 0; i--) {
-      const dt         = new Date(year, month - 1 - i);
-      const histYear   = dt.getFullYear();
-      const histMonth  = dt.getMonth() + 1;
-
-      // Find matching budget in the same series (same cat set & recurring flag)
-      const histBudget = await Budget.findOne({
-        userId: req.user._id,
-        categories: { $size: budget.categories.length, $all: budget.categories },
-        month: histMonth,
-        year: histYear,
-      });
-
-      if (!histBudget) continue; // skip if user had no budget that month
-
-      const s = new Date(histYear, histMonth - 1, 1);
-      const e = new Date(histYear, histMonth, 0, 23, 59, 59);
-
-      const spentHistAgg = await Expense.aggregate([
+    const usageMap = {};
+    for (const b of budgets) {
+      const { start, end } = getMonthRange(b.year, b.month);
+      const spentAgg = await Expense.aggregate([
         {
           $match: {
             userId: req.user._id,
-            categoryId: { $in: histBudget.categories },
-            date: { $gte: s, $lte: e },
+            categoryId: { $in: b.categories },
+            date: { $gte: start, $lte: end },
           },
         },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]);
-      history.push({
-        month: `${dt.toLocaleString("default", { month: "short" })} ${histYear}`,
-        budget: histBudget.amount,
-        spent: spentHistAgg[0]?.total || 0,
+      const spent = spentAgg[0]?.total || 0;
+      const percent = Number(((spent / b.amount) * 100).toFixed(1));
+      usageMap[String(b.recurringBudgetId)] = { spent, percent };
+    }
+
+    const output = recurringBudgets.map((r) => {
+      const usage = usageMap[String(r._id)] || { spent: 0, percent: 0 };
+      return {
+        ...r.toObject(),
+        currentMonth: { spent: usage.spent, percent: usage.percent },
+      };
+    });
+
+    res.json(output);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load recurring budget usage" });
+  }
+};
+
+// 5. Get full summary for a specific budget in a month
+const Category = require("../models/category");
+
+const getBudgetMonthSummary = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const month = parseInt(req.query.month);
+    const year = parseInt(req.query.year);
+    const userId = req.user._id;
+
+    const budget = await Budget.findOne({ _id: id, userId }).populate("categories");
+    if (!budget) return res.status(404).json({ error: "Budget not found" });
+
+    const { start, end } = getMonthRange(year, month);
+    const categoryIds = budget.categories.map(c => c._id || c);
+
+    const expenses = await Expense.aggregate([
+      {
+        $match: {
+          userId,
+          categoryId: { $in: categoryIds },
+          date: { $gte: start, $lte: end },
+        },
+      },
+      {
+        $group: {
+          _id: "$categoryId",
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const spentMap = Object.fromEntries(expenses.map(e => [e._id.toString(), e.total]));
+    const spentTotal = expenses.reduce((s, e) => s + e.total, 0);
+    const remaining = budget.amount - spentTotal;
+    const percent = Number(((spentTotal / budget.amount) * 100).toFixed(1));
+
+    const categoryBreakdown = budget.categories.map(cat => ({
+      name: cat.name,
+      amount: budget.amount / budget.categories.length,
+      spent: spentMap[cat._id.toString()] || 0,
+    }));
+
+    const historicalData = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(year, month - 1 - i);
+      const m = d.getMonth() + 1;
+      const y = d.getFullYear();
+      const range = getMonthRange(y, m);
+
+      const b = await Budget.findOne({
+        userId,
+        recurringBudgetId: budget.recurringBudgetId,
+        month: m,
+        year: y,
+      });
+
+      let totalSpent = 0;
+      if (b) {
+        const expenseAgg = await Expense.aggregate([
+          {
+            $match: {
+              userId,
+              categoryId: { $in: b.categories },
+              date: { $gte: range.start, $lte: range.end },
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]);
+        totalSpent = expenseAgg[0]?.total || 0;
+      }
+
+      historicalData.push({
+        month: `${d.toLocaleString("default", { month: "short" })} ${y}`,
+        spent: totalSpent,
+        budget: b?.amount || 0,
       });
     }
 
     res.json({
       amount: budget.amount,
-      spent,
+      spent: spentTotal,
       remaining,
       percent,
       categoryBreakdown,
-      historicalData: history,
+      historicalData,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch summary" });
+    console.error("Budget summary error:", err);
+    res.status(500).json({ error: "Failed to load budget summary" });
   }
 };
-
 module.exports = {
-  createBudget,
-  updateBudget,
-  getUserBudgets,
-  getSingleBudget,
-  deleteBudget,
+  getBudgetsForRecurring,
+  getCurrentMonthBudgets,
+  getArchivedRecurringBudgets,
+  getRecurringBudgetsWithCurrentMonthUsage,
   getBudgetMonthSummary,
 };

@@ -1,66 +1,81 @@
-// src/controllers/recurringBudgetController.js
 const RecurringBudget = require("../models/recurringBudget");
 const Budget = require("../models/budget");
-const { startOfMonth } = require("date-fns");
 
-// 1. Create Recurring Budget
-exports.createRecurringBudget = async (req, res) => {
+// 1. Create a new recurring budget
+const createRecurringBudget = async (req, res) => {
   try {
-    const { categories, amount, startDate, endDate } = req.body;
+    const { categories, amount, endMonth, endYear } = req.body;
     const userId = req.user._id;
+
     const now = new Date();
-    const start = new Date(startDate);
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
 
-    // Start date must be current month
-    if (start.getFullYear() !== now.getFullYear() || start.getMonth() !== now.getMonth()) {
-      return res.status(400).json({ error: "Start month must be the current month." });
-    }
-
-    // End date (if provided) cannot be in the past
-    if (endDate && new Date(endDate) < now) {
-      return res.status(400).json({ error: "End date cannot be in the past." });
+    // Prevent end date in the past
+    if (endMonth && endYear) {
+      if (
+        endYear < currentYear ||
+        (endYear === currentYear && endMonth < currentMonth)
+      ) {
+        return res
+          .status(400)
+          .json({ error: "End date cannot be in the past." });
+      }
     }
 
     // Prevent duplicate category set
-    const exists = await RecurringBudget.findOne({
-      userId,
-      categories: { $size: categories.length, $all: categories },
-      isActive: true,
+    const allActive = await RecurringBudget.find({ userId, isActive: true });
+
+    const isDuplicate = allActive.some((r) => {
+      const rSet = new Set(r.categories.map(String));
+      const newSet = new Set(categories.map(String));
+      if (rSet.size !== newSet.size) return false;
+      for (let cat of newSet) {
+        if (!rSet.has(cat)) return false;
+      }
+      return true;
     });
 
-    if (exists) {
-      return res.status(400).json({ error: "A budget for these categories already exists." });
+    if (isDuplicate) {
+      return res
+        .status(400)
+        .json({ error: "A budget for these categories already exists." });
     }
 
+    
     // Create recurring budget
     const recurring = new RecurringBudget({
       userId,
       categories,
       amount,
-      startDate: startOfMonth(start),
-      endDate: endDate ? startOfMonth(new Date(endDate)) : null,
+      startMonth: currentMonth,
+      startYear: currentYear,
+      endMonth: endMonth || null,
+      endYear: endYear || null,
     });
     await recurring.save();
 
-    // Create first (current month) budget
-    const currentBudget = new Budget({
+    // Also create current month budget
+    const budget = new Budget({
       userId,
       recurringBudgetId: recurring._id,
-      month: start.getMonth() + 1,
-      year: start.getFullYear(),
+      month: currentMonth,
+      year: currentYear,
       amount,
+      categories,
+      isArchived: false,
     });
-    await currentBudget.save();
+    await budget.save();
 
-    res.status(201).json({ recurring, budget: currentBudget });
+    res.status(201).json({ recurring, budget });
   } catch (err) {
     console.error("Create Recurring Budget Error:", err);
     res.status(500).json({ error: "Failed to create recurring budget." });
   }
 };
 
-// 2. Deactivate Recurring Budget
-exports.deactivateRecurringBudget = async (req, res) => {
+// 2. Deactivate a recurring budget
+const deactivateRecurringBudget = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -71,37 +86,139 @@ exports.deactivateRecurringBudget = async (req, res) => {
       { new: true }
     );
 
-    if (!recurring) return res.status(404).json({ error: "Recurring budget not found." });
+    if (!recurring) {
+      return res.status(404).json({ error: "Recurring budget not found." });
+    }
 
     const now = new Date();
+    const thisMonth = now.getMonth() + 1;
+    const thisYear = now.getFullYear();
+
     await Budget.updateMany(
       {
         recurringBudgetId: recurring._id,
         $or: [
-          { year: { $gt: now.getFullYear() } },
-          {
-            year: now.getFullYear(),
-            month: { $gte: now.getMonth() + 1 },
-          },
+          { year: { $gt: thisYear } },
+          { year: thisYear, month: { $gt: thisMonth } },
         ],
       },
       { isArchived: true }
     );
 
-    res.json({ message: "Recurring budget deactivated and associated budgets archived." });
+    res.json({
+      message: "Recurring budget deactivated and future budgets archived.",
+    });
   } catch (err) {
     console.error("Deactivate Recurring Budget Error:", err);
     res.status(500).json({ error: "Failed to deactivate budget." });
   }
 };
 
-// 3. Get All Active Recurring Budgets
-exports.getRecurringBudgets = async (req, res) => {
+// 3. Update end date
+const updateRecurringBudgetEndDate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { endMonth, endYear } = req.body;
+    const userId = req.user._id;
+
+    if (!endMonth || !endYear) {
+      return res
+        .status(400)
+        .json({ error: "End month and year are required." });
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    if (
+      endYear < currentYear ||
+      (endYear === currentYear && endMonth < currentMonth)
+    ) {
+      return res.status(400).json({ error: "End date cannot be in the past." });
+    }
+
+    const updated = await RecurringBudget.findOneAndUpdate(
+      { _id: id, userId, isActive: true },
+      { endMonth, endYear },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Recurring budget not found." });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Update End Date Error:", err);
+    res.status(500).json({ error: "Failed to update end date." });
+  }
+};
+
+// 4. Get active recurring budgets
+const getActiveRecurringBudgets = async (req, res) => {
   try {
     const userId = req.user._id;
-    const budgets = await RecurringBudget.find({ userId, isActive: true }).sort({ createdAt: -1 });
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const budgets = await RecurringBudget.find({
+      userId,
+      isActive: true,
+      $or: [
+        { endYear: null, endMonth: null },
+        {
+          $or: [
+            { endYear: { $gt: currentYear } },
+            { endYear: currentYear, endMonth: { $gte: currentMonth } },
+          ],
+        },
+      ],
+    }).sort({ createdAt: -1 });
+
     res.json(budgets);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch recurring budgets." });
+    console.error("Fetch Active Budgets Error:", err);
+    res.status(500).json({ error: "Failed to fetch active budgets." });
   }
+};
+
+// 5. Get archived recurring budgets
+const getArchivedRecurringBudgets = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const archived = await RecurringBudget.find({
+      userId,
+      $or: [
+        { isActive: false },
+        {
+          endYear: { $lt: currentYear },
+        },
+        {
+          endYear: currentYear,
+          endMonth: { $lt: currentMonth },
+        },
+      ],
+    }).sort({ createdAt: -1 });
+
+    res.json(archived);
+  } catch (err) {
+    console.error("Fetch Archived Budgets Error:", err);
+    res.status(500).json({ error: "Failed to fetch archived budgets." });
+  }
+};
+
+//Maake a route to get calculated current month budgets expense of all Recurring Budget
+
+module.exports = {
+  createRecurringBudget,
+  deactivateRecurringBudget,
+  updateRecurringBudgetEndDate,
+  getActiveRecurringBudgets,
+  getArchivedRecurringBudgets,
 };

@@ -1,12 +1,7 @@
-// New stylized BudgetPage.tsx with card layout, modal form, progress bar, and animations
 import { useEffect, useState } from "react";
+import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
-import api from "@/api/axiosInstance";
-import BudgetStatsModal from "@/components/budget/BudgetStatsModal";
-import EditBudgetModal from "@/components/budget/EditBudgetModal";
 import {
   Dialog,
   DialogContent,
@@ -15,14 +10,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import BudgetStatsModal from "@/components/budget/BudgetStatsModal";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
-interface Budget {
+interface RecurringBudget {
   _id: string;
-  month: number;
-  year: number;
-  amount: number;
   categories: string[];
-  isRecurring: boolean;
+  amount: number;
+  startMonth: number;
+  startYear: number;
+  endMonth: number | null;
+  endYear: number | null;
+  isActive: boolean;
+  currentMonth?: {
+    spent: number;
+    percent: number;
+  };
 }
 
 interface Category {
@@ -30,25 +33,20 @@ interface Category {
   name: string;
 }
 
-interface Stat {
-  spent: number;
-  percent: number;
-}
-
 export default function BudgetPage() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [budgets, setBudgets] = useState<RecurringBudget[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [statsMap, setStatsMap] = useState<Record<string, Stat>>({});
   const [formOpen, setFormOpen] = useState(false);
-  const [statsBudget, setStatsBudget] = useState<Budget | null>(null);
-  const [editing, setEditing] = useState<Budget | null>(null);
+  const [selected, setSelected] = useState<RecurringBudget | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeactivateId, setPendingDeactivateId] = useState<string | null>(null);
+
 
   const [form, setForm] = useState({
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
     amount: "",
     categories: [] as string[],
-    isRecurring: true,
+    endMonth: null as number | null,
+    endYear: null as number | null,
   });
 
   useEffect(() => {
@@ -57,30 +55,12 @@ export default function BudgetPage() {
 
   const fetchData = async () => {
     try {
-      const [budRes, catRes] = await Promise.all([
-        api.get("/budgets"),
+      const [recurringRes, catRes] = await Promise.all([
+        api.get("/budgets/with-usage"),
         api.get("/categories"),
       ]);
-      setBudgets(budRes.data);
+      setBudgets(recurringRes.data);
       setCategories(catRes.data);
-
-      const stats: Record<string, Stat> = {};
-      await Promise.all(
-        budRes.data.map(async (b: Budget) => {
-          try {
-            const res = await api.get(
-              `/budgets/${b._id}/month-summary?month=${b.month}&year=${b.year}`
-            );
-            stats[b._id] = {
-              spent: res.data.spent,
-              percent: res.data.percent,
-            };
-          } catch {
-            stats[b._id] = { spent: 0, percent: 0 };
-          }
-        })
-      );
-      setStatsMap(stats);
     } catch (err) {
       console.error(err);
     }
@@ -98,26 +78,33 @@ export default function BudgetPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/budgets", {
-        ...form,
+      await api.post("/recurring-budgets", {
         amount: Number(form.amount),
+        categories: form.categories,
+        startDate: new Date(),
+        endMonth: form.endMonth || null,
+        endYear: form.endYear || null,
       });
       setFormOpen(false);
-      setForm({
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-        amount: "",
-        categories: [],
-        isRecurring: true,
-      });
+      setForm({ amount: "", categories: [], endMonth: null, endYear: null });
       fetchData();
-    } catch (err) {
-      alert("Failed to add budget");
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to create budget");
     }
   };
 
-  const monthName = (m: number) =>
-    new Date(0, m - 1).toLocaleString("default", { month: "long" });
+  const confirmDeactivate = (id: string) => {
+    setPendingDeactivateId(id);
+    setConfirmOpen(true);
+  };
+
+  const doDeactivate = async () => {
+    if (!pendingDeactivateId) return;
+    await api.patch(`/recurring-budgets/${pendingDeactivateId}/deactivate`);
+    setConfirmOpen(false);
+    setPendingDeactivateId(null);
+    fetchData();
+  };
 
   return (
     <div className="flex-1 min-h-screen bg-black text-white px-6 py-10">
@@ -131,59 +118,52 @@ export default function BudgetPage() {
               className="border border-white/20 rounded-lg p-5 bg-black hover:shadow-xl transition cursor-pointer"
               onClick={(e) => {
                 if ((e.target as HTMLElement).tagName === "BUTTON") return;
-                setStatsBudget(b);
+                setSelected(b);
               }}
             >
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold">
                   {b.categories
-                    .map((id) =>
-                      categories.find((c) => c._id === id)?.name ?? "Unknown"
+                    .map(
+                      (id) =>
+                        categories.find((c) => c._id === id)?.name ?? "Unknown"
                     )
-                    .join(" | ") || "All Categories"}
+                    .join(" | ")}
                 </h2>
                 <div className="text-sm text-gray-400">
-                  {monthName(b.month)} {b.year}
+                  {/* Show the current Month and Year */}
+                  {new Date().toLocaleString("default", {
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </div>
               </div>
 
               <div className="mt-4">
                 <Progress
-                  value={statsMap[b._id]?.percent || 0}
+                  value={b.currentMonth?.percent || 0}
                   className="h-3 bg-white/10"
                   indicatorClassName={
-                    statsMap[b._id]?.percent > 100
+                    (b.currentMonth?.percent || 0) > 100
                       ? "bg-red-500"
-                      : statsMap[b._id]?.percent > 70
+                      : (b.currentMonth?.percent || 0) > 70
                       ? "bg-yellow-500"
                       : "bg-green-500"
                   }
                 />
                 <div className="text-xs text-gray-400 mt-1">
-                  {statsMap[b._id]?.percent?.toFixed(1) || 0}% used — $
-                  {statsMap[b._id]?.spent?.toFixed(2) || 0} spent
+                  {b.currentMonth?.percent?.toFixed(1) || 0}% used — $
+                  {b.currentMonth?.spent?.toFixed(2) || 0} spent
                 </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-4">
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={() => setEditing(b)}
-                  className="z-10"
+                  onClick={() => confirmDeactivate(b._id)}
+                  className="z-10 bg-white text-black rounded-md hover:bg-gray-200"
                 >
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={async () => {
-                    await api.delete(`/budgets/${b._id}`);
-                    fetchData();
-                  }}
-                  className="z-10"
-                >
-                  Delete
+                  Deactivate
                 </Button>
               </div>
             </div>
@@ -206,40 +186,18 @@ export default function BudgetPage() {
             <DialogTitle>Add Budget</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            <div className="flex gap-3">
-              <select
-                name="month"
-                value={form.month}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, month: Number(e.target.value) }))
-                }
-                className="bg-black border border-white/20 p-2 rounded"
-              >
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <option key={i + 1} value={i + 1} className="text-gray-500">
-                    {monthName(i + 1)}
-                  </option>
-                ))}
-              </select>
-              <select
-                name="year"
-                value={form.year}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, year: Number(e.target.value) }))
-                }
-                className="bg-black border border-white/20 p-2 rounded"
-              >
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const y = new Date().getFullYear() - (4 - i);
-                  return (
-                    <option key={y} value={y} className="text-gray-500">
-                      {y}
-                    </option>
-                  );
-                })}
-              </select>
+            {/* Start Month Display */}
+            <div>
+              <label className="text-sm mb-1 block">Start Date</label>
+              <Input
+                type="text"
+                value={`${new Date().toDateString()}`}
+                disabled
+                className="bg-black border border-white/20 text-white opacity-70 cursor-not-allowed"
+              />
             </div>
 
+            {/* Budget Amount */}
             <Input
               type="number"
               name="amount"
@@ -252,16 +210,7 @@ export default function BudgetPage() {
               required
             />
 
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={form.isRecurring}
-                onCheckedChange={(c) =>
-                  setForm((p) => ({ ...p, isRecurring: !!c }))
-                }
-              />
-              <span className="text-sm">Recurring</span>
-            </div>
-
+            {/* Category Selection */}
             <div>
               <label className="text-sm mb-1 block">Categories</label>
               <div className="grid grid-cols-2 gap-2">
@@ -280,6 +229,52 @@ export default function BudgetPage() {
               </div>
             </div>
 
+            <div>
+              <label className="text-sm mb-1 block">End Month (optional)</label>
+              <div className="flex gap-2">
+                <select
+                  value={form.endMonth || ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      endMonth: Number(e.target.value) || null,
+                    }))
+                  }
+                  className="bg-black border border-white/20 p-2 rounded text-white"
+                >
+                  <option value="">Month</option>
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString("default", {
+                        month: "long",
+                      })}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={form.endYear || ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      endYear: Number(e.target.value) || null,
+                    }))
+                  }
+                  className="bg-black border border-white/20 p-2 rounded text-white"
+                >
+                  <option value="">Year</option>
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const y = new Date().getFullYear() + i;
+                    return (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+
+            {/* Submit Button */}
             <Button
               type="submit"
               className="mt-2 bg-white text-black w-full hover:bg-gray-100"
@@ -290,35 +285,22 @@ export default function BudgetPage() {
         </DialogContent>
       </Dialog>
 
-      {statsBudget && (
+      {selected && (
         <BudgetStatsModal
-          open={!!statsBudget}
-          onClose={() => setStatsBudget(null)}
-          budget={statsBudget}
-          timeline={budgets
-            .filter(
-              (b) =>
-                JSON.stringify(b.categories.sort()) ===
-                  JSON.stringify(statsBudget.categories.sort()) &&
-                b.isRecurring === statsBudget.isRecurring
-            )
-            .sort((a, b) => a.year - b.year || a.month - b.month)}
+          open={!!selected}
+          onClose={() => setSelected(null)}
+          recurringId={selected._id}
         />
       )}
 
-      {editing && (
-        <EditBudgetModal
-          open={!!editing}
-          onClose={() => setEditing(null)}
-          initial={editing}
-          categories={categories}
-          onSave={async (updated) => {
-            await api.patch(`/budgets/${editing._id}`, updated);
-            setEditing(null);
-            fetchData();
-          }}
-        />
-      )}
+<ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Deactivate Budget?"
+        description="This will stop future budgets and archive upcoming ones."
+        onConfirm={doDeactivate}
+      />
+
     </div>
   );
 }

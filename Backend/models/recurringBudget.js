@@ -40,10 +40,6 @@ const recurringBudgetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Enforce unique category set per user (only one active recurringBudget per category set)
-recurringBudgetSchema.index(
-  { userId: 1, categories: 1, isActive: 1 },
-  { unique: true, partialFilterExpression: { isActive: true } }
-);
+
 
 module.exports = mongoose.model("RecurringBudget", recurringBudgetSchema);
