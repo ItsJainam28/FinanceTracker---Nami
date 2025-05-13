@@ -16,7 +16,7 @@ interface Props {
   categories: { _id: string; name: string }[];
   onSave: (data: {
     name: string;
-    amount: string | number;
+    amount: number;
     date: string;
     categoryId: string;
   }) => Promise<void>;
@@ -44,18 +44,19 @@ export default function EditExpenseModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <form
         onSubmit={submit}
-        className="bg-white rounded-md shadow-xl p-6 w-full max-w-md space-y-4"
+        className="bg-black text-white border border-white rounded-xl shadow-2xl p-6 w-full max-w-md space-y-5"
       >
-        <h2 className="text-xl font-bold">Edit Expense</h2>
+        <h2 className="text-2xl font-semibold text-white">Edit Expense</h2>
         <Input
           name="name"
           value={form.name}
           onChange={handleChange}
           placeholder="Name"
           required
+          className="bg-black text-white border-white placeholder:text-gray-400"
         />
         <Input
           type="number"
@@ -64,22 +65,24 @@ export default function EditExpenseModal({
           onChange={handleChange}
           placeholder="Amount"
           required
+          className="bg-black text-white border-white placeholder:text-gray-400"
         />
         <Input
           type="date"
           name="date"
-          value={form.date}
+          value={form.date} 
           onChange={handleChange}
           required
+          className="bg-black text-white border-white"
         />
         <Select
           value={form.categoryId}
           onValueChange={(val) => setForm((p) => ({ ...p, categoryId: val }))}
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-black text-white border border-white">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-black text-white border border-white">
             {categories.map((c) => (
               <SelectItem key={c._id} value={c._id}>
                 {c.name}
@@ -88,11 +91,21 @@ export default function EditExpenseModal({
           </SelectContent>
         </Select>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
+        <div className="flex justify-end gap-3 pt-4">
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={onClose}
+            className="border border-white text-white hover:bg-white hover:text-black"
+          >
             Cancel
           </Button>
-          <Button type="submit">Save</Button>
+          <Button
+            type="submit"
+            className="bg-white text-black hover:bg-gray-200"
+          >
+            Save
+          </Button>
         </div>
       </form>
     </div>

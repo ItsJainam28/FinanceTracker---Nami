@@ -14,9 +14,12 @@ import CategoriesPage from "@/pages/Categories/CategoriesPage";
 import ScheduledExpensesPage from "@/pages/ScheduledExpenses/ScheduledExpensesPage";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import AppShell from "@/layouts/AppShell";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+const queryClient = new QueryClient();
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <Router>
       <Routes>
         {/* public */}
@@ -43,5 +46,6 @@ export default function App() {
         </Route>
       </Routes>
     </Router>
+    </QueryClientProvider>
   );
 }

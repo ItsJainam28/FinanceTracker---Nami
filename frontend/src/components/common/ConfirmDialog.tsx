@@ -46,7 +46,7 @@ export function ConfirmDialog({
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button className="bg-white text-black hover:bg-gray-200">
+            <Button className="bg-white text-black hover:bg-gray-200" onClick={()=>{onConfirm()}}>
               Yes
             </Button>
           </AlertDialogAction>
