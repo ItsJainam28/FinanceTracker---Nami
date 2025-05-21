@@ -4,7 +4,8 @@ const Budget = require("../models/budget");
 // 1. Create a new recurring budget
 const createRecurringBudget = async (req, res) => {
   try {
-    const { categories, amount, endMonth, endYear } = req.body;
+    const { name, categories, amount, endMonth, endYear } = req.body;
+    console.log("Request Body:", req.body);
     const userId = req.user._id;
 
     const now = new Date();
@@ -46,6 +47,7 @@ const createRecurringBudget = async (req, res) => {
     // Create recurring budget
     const recurring = new RecurringBudget({
       userId,
+      name,
       categories,
       amount,
       startMonth: currentMonth,
@@ -155,6 +157,47 @@ const updateRecurringBudgetEndDate = async (req, res) => {
   }
 };
 
+const updateRecurringBudget = async (req, res) => {
+  try {
+    const { name, amount, categories } = req.body;
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const recurring = await RecurringBudget.findOne({ _id: id, userId });
+    if (!recurring) return res.status(404).json({ error: "Budget not found" });
+
+    // Update recurring budget fields
+    recurring.name = name;
+    recurring.amount = amount;
+    recurring.categories = categories;
+    await recurring.save();
+
+    // Update the current month's budget (if it exists)
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    await Budget.updateOne(
+      {
+        recurringBudgetId: id,
+        month: currentMonth,
+        year: currentYear,
+      },
+      {
+        $set: {
+          amount,
+          categories,
+        },
+      }
+    );
+
+    res.json({ message: "Recurring budget updated successfully" });
+  } catch (err) {
+    console.error("Error updating recurring budget:", err);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
 // 4. Get active recurring budgets
 const getActiveRecurringBudgets = async (req, res) => {
   try {
@@ -221,4 +264,5 @@ module.exports = {
   updateRecurringBudgetEndDate,
   getActiveRecurringBudgets,
   getArchivedRecurringBudgets,
+  updateRecurringBudget,
 };

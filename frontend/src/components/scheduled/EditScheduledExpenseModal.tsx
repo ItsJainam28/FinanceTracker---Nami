@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Props {
   open: boolean;
@@ -15,100 +11,100 @@ interface Props {
   initial: {
     name: string;
     amount: number;
-    startDate: string;
-    endDate?: string;
-    categoryId: string;
+    endDate?: string | null;
     isActive: boolean;
   };
-  categories: { _id: string; name: string }[];
-  onSave: (data: any) => Promise<void>;
+  onSave: (data: {
+    name: string;
+    amount: number;
+    endDate?: string | null;
+    isActive: boolean;
+  }) => Promise<void>;
 }
 
-export default function EditScheduledExpenseModal({
-  open,
-  onClose,
-  initial,
-  categories,
-  onSave,
-}: Props) {
+export default function EditScheduledExpenseModal({ open, onClose, initial, onSave }: Props) {
   const [form, setForm] = useState(initial);
-  useEffect(() => setForm(initial), [initial]);
-  if (!open) return null;
+
+  useEffect(() => {
+    if (open) setForm(initial);
+  }, [open, initial]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setForm((p) => ({
-      ...p,
+    setForm((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSave(form);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSave(form);
-        }}
-        className="bg-white p-6 rounded shadow w-full max-w-md space-y-4"
-      >
-        <h2 className="text-xl font-bold">Edit Scheduled Expense</h2>
-        <Input name="name" value={form.name} onChange={handleChange} required />
-        <Input
-          type="number"
-          name="amount"
-          value={form.amount}
-          onChange={handleChange}
-          required
-        />
-        <Input
-          type="date"
-          name="startDate"
-          value={form.startDate}
-          onChange={handleChange}
-          required
-        />
-        <Input
-          type="date"
-          name="endDate"
-          value={form.endDate || ""}
-          onChange={handleChange}
-        />
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="bg-zinc-900 border border-zinc-800 text-white rounded-lg max-w-md w-full space-y-6 p-6 shadow-xl">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold">Edit Scheduled Expense</DialogTitle>
+        </DialogHeader>
 
-        {/* Category dropdown */}
-        <Select
-          value={form.categoryId}
-          onValueChange={(val) => setForm((p) => ({ ...p, categoryId: val }))}
-        >
-          <SelectTrigger className="bg-white border border-gray-300 rounded px-2 py-2">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-md">
-            {categories.map((c) => (
-              <SelectItem key={c._id} value={c._id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
+          <div>
+            <Label className="text-sm">Name</Label>
+            <Input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className="bg-zinc-800 border-zinc-700 text-white"
+            />
+          </div>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="isActive"
-            checked={form.isActive}
-            onChange={handleChange}
-          />
-          Enable auto‑payment
-        </label>
+          {/* Amount */}
+          <div>
+            <Label className="text-sm">Amount</Label>
+            <Input
+              type="number"
+              name="amount"
+              value={form.amount}
+              onChange={handleChange}
+              required
+              className="bg-zinc-800 border-zinc-700 text-white"
+            />
+          </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">Save</Button>
-        </div>
-      </form>
-    </div>
+          {/* End Date */}
+          <div>
+            <Label className="text-sm">End Date</Label>
+            <Input
+              type="date"
+              name="endDate"
+              value={form.endDate || ""}
+              onChange={handleChange}
+              className="bg-zinc-800 border-zinc-700 text-white"
+            />
+          </div>
+
+          {/* Active Toggle */}
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">Auto-payment Enabled</Label>
+            <Switch
+              checked={form.isActive}
+              onCheckedChange={(val) => setForm((p) => ({ ...p, isActive: val }))}
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="secondary" type="button" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">Save Changes</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 interface RecurringBudget {
   _id: string;
+  name: string;
   categories: string[];
   amount: number;
   startMonth: number;
@@ -39,10 +40,12 @@ export default function BudgetPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState<RecurringBudget | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingDeactivateId, setPendingDeactivateId] = useState<string | null>(null);
-
+  const [pendingDeactivateId, setPendingDeactivateId] = useState<string | null>(
+    null
+  );
 
   const [form, setForm] = useState({
+    name: "",
     amount: "",
     categories: [] as string[],
     endMonth: null as number | null,
@@ -79,14 +82,22 @@ export default function BudgetPage() {
     e.preventDefault();
     try {
       await api.post("/recurring-budgets", {
+        name: form.name,
         amount: Number(form.amount),
         categories: form.categories,
         startDate: new Date(),
         endMonth: form.endMonth || null,
         endYear: form.endYear || null,
       });
+
       setFormOpen(false);
-      setForm({ amount: "", categories: [], endMonth: null, endYear: null });
+      setForm({
+        name: "",
+        amount: "",
+        categories: [],
+        endMonth: null,
+        endYear: null,
+      });
       fetchData();
     } catch (err: any) {
       alert(err.response?.data?.error || "Failed to create budget");
@@ -121,15 +132,20 @@ export default function BudgetPage() {
                 setSelected(b);
               }}
             >
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold">
-                  {b.categories
-                    .map(
-                      (id) =>
-                        categories.find((c) => c._id === id)?.name ?? "Unknown"
-                    )
-                    .join(" | ")}
-                </h2>
+              {/* h2 and p shoudl be vertically */}
+              <div className="flex justify-between ">
+                <div className="flex-y justify-between items-center ">
+                  <h2 className="text-lg font-bold">{b.name}</h2>
+                  <p className="text-sm text-gray-400">
+                    {b.categories
+                      .map(
+                        (id) =>
+                          categories.find((c) => c._id === id)?.name ??
+                          "Unknown"
+                      )
+                      .join(" | ")}
+                  </p>
+                </div>
                 <div className="text-sm text-gray-400">
                   {/* Show the current Month and Year */}
                   {new Date().toLocaleString("default", {
@@ -188,6 +204,19 @@ export default function BudgetPage() {
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             {/* Start Month Display */}
             <div>
+              <label className="text-sm mb-1 block">Name</label>
+              <Input
+                type="text"
+                name="name"
+                placeholder="Budget Name"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
+                className="bg-black border border-white/20 text-white"
+                required
+              />
+
               <label className="text-sm mb-1 block">Start Date</label>
               <Input
                 type="text"
@@ -293,14 +322,13 @@ export default function BudgetPage() {
         />
       )}
 
-<ConfirmDialog
+      <ConfirmDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Deactivate Budget?"
         description="This will stop future budgets and archive upcoming ones."
         onConfirm={doDeactivate}
       />
-
     </div>
   );
 }

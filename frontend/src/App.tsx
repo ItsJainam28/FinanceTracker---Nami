@@ -15,7 +15,10 @@ import ScheduledExpensesPage from "@/pages/ScheduledExpenses/ScheduledExpensesPa
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import AppShell from "@/layouts/AppShell";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
+import Navbar from "./components/common/Navbar";
+import { AddExpensePage } from "./pages/Expenses/AddExpensePage";
+import { Toaster } from "sonner";
+import AddScheduledExpensePage from "@/pages/ScheduledExpenses/AddScheduleExpensePage";
 const queryClient = new QueryClient();
 export default function App() {
   return (
@@ -43,9 +46,14 @@ export default function App() {
             path="/scheduled-expenses"
             element={<ScheduledExpensesPage />}
           />
+          <Route path="/expenses/new" element={<AddExpensePage/>} />
+        <Route path="/scheduled-expenses/new" element={<AddScheduledExpensePage />} />
+          
         </Route>
       </Routes>
     </Router>
+    <Toaster position="top-right" richColors />
     </QueryClientProvider>
   );
 }
+

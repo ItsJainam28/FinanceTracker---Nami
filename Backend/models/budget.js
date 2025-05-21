@@ -7,6 +7,7 @@ const budgetSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     recurringBudgetId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RecurringBudget",

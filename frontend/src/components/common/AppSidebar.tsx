@@ -25,21 +25,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import api from "@/api/axiosInstance";
 
-interface NavItem {
-  label: string;
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-const navMain: NavItem[] = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboardIcon },
-  { label: "Budgets", to: "/budgets", icon: WalletIcon },
-  { label: "Expenses", to: "/expenses", icon: ClipboardListIcon },
-  { label: "Scheduled", to: "/scheduled-expenses", icon: CalendarCheckIcon },
-  { label: "Categories", to: "/categories", icon: ListIcon },
-  { label: "Analytics", to: "/analytics", icon: BarChartIcon },
-];
-
 export default function AppSidebar(
   props: React.ComponentProps<typeof Sidebar>
 ) {
@@ -47,6 +32,8 @@ export default function AppSidebar(
   const navigate = useNavigate();
   const [userName, setUserName] = React.useState("User");
   const [userEmail, setUserEmail] = React.useState("user@example.com");
+  const [expensesOpen, setExpensesOpen] = React.useState(false);
+  const [scheduledOpen, setScheduledOpen] = React.useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -70,7 +57,6 @@ export default function AppSidebar(
   return (
     <Sidebar
       variant="sidebar"
-
       className="fixed inset-y-0 left-0 z-40 w-72 shrink-0 bg-black text-white shadow-lg"
       {...props}
     >
@@ -94,29 +80,165 @@ export default function AppSidebar(
       <SidebarContent>
         <ScrollArea className="h-full">
           <nav className="space-y-1 px-4 pb-8 pt-6">
-            {navMain.map(({ label, to, icon: Icon }) => {
-              const active = pathname === to;
-              return (
-                <SidebarMenu key={to}>
+            {/* --- Dashboard, Budgets, Categories, Analytics --- */}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "w-full justify-start gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+                    pathname === "/dashboard"
+                      ? "bg-gray-700 text-white"
+                      : "hover:bg-gray-800 hover:text-white"
+                  )}
+                >
+                  <Link to="/dashboard">
+                    <LayoutDashboardIcon className="h-5 w-5 shrink-0" />
+                    Dashboard
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "w-full justify-start gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+                    pathname === "/budgets"
+                      ? "bg-gray-700 text-white"
+                      : "hover:bg-gray-800 hover:text-white"
+                  )}
+                >
+                  <Link to="/budgets">
+                    <WalletIcon className="h-5 w-5 shrink-0" />
+                    Budgets
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "w-full justify-start gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+                    pathname === "/categories"
+                      ? "bg-gray-700 text-white"
+                      : "hover:bg-gray-800 hover:text-white"
+                  )}
+                >
+                  <Link to="/categories">
+                    <ListIcon className="h-5 w-5 shrink-0" />
+                    Categories
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+      
+            </SidebarMenu>
+
+            {/* --- Expenses Dropdown --- */}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <button
+                  onClick={() => setExpensesOpen(!expensesOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+                    pathname.startsWith("/expenses")
+                      ? "bg-gray-700 text-white"
+                      : "hover:bg-gray-800 hover:text-white"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <ClipboardListIcon className="h-5 w-5 shrink-0" />
+                    <span>Expenses</span>
+                  </div>
+                  <span className="ml-auto">{expensesOpen ? "▾" : "▸"}</span>
+                </button>
+              </SidebarMenuItem>
+
+              {expensesOpen && (
+                <div className="pl-10 text-sm space-y-1">
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
                       className={cn(
-                        "w-full justify-start gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors",
-                        active
+                        "w-full justify-start rounded-md px-3 py-2 transition-colors",
+                        pathname === "/expenses"
                           ? "bg-gray-700 text-white"
                           : "hover:bg-gray-800 hover:text-white"
                       )}
                     >
-                      <Link to={to}>
-                        <Icon className="h-5 w-5 shrink-0" />
-                        {label}
-                      </Link>
+                      <Link to="/expenses">Transactions</Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                </SidebarMenu>
-              );
-            })}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "w-full justify-start rounded-md px-3 py-2 transition-colors",
+                        pathname === "/expenses/new"
+                          ? "bg-gray-700 text-white"
+                          : "hover:bg-gray-800 hover:text-white"
+                      )}
+                    >
+                      <Link to="/expenses/new">Add Expense</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </div>
+              )}
+            </SidebarMenu>
+
+            {/* --- Scheduled Dropdown --- */}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <button
+                  onClick={() => setScheduledOpen(!scheduledOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors",
+                    pathname.startsWith("/scheduled-expenses")
+                      ? "bg-gray-700 text-white"
+                      : "hover:bg-gray-800 hover:text-white"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <CalendarCheckIcon className="h-5 w-5 shrink-0" />
+                    <span>Scheduled</span>
+                  </div>
+                  <span className="ml-auto">{scheduledOpen ? "▾" : "▸"}</span>
+                </button>
+              </SidebarMenuItem>
+
+              {scheduledOpen && (
+                <div className="pl-10 text-sm space-y-1">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "w-full justify-start rounded-md px-3 py-2 transition-colors",
+                        pathname === "/scheduled-expenses"
+                          ? "bg-gray-700 text-white"
+                          : "hover:bg-gray-800 hover:text-white"
+                      )}
+                    >
+                      <Link to="/scheduled-expenses">All Scheduled</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "w-full justify-start rounded-md px-3 py-2 transition-colors",
+                        pathname === "/scheduled-expenses/new"
+                          ? "bg-gray-700 text-white"
+                          : "hover:bg-gray-800 hover:text-white"
+                      )}
+                    >
+                      <Link to="/scheduled-expenses/new">Add Scheduled</Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </div>
+              )}
+            </SidebarMenu>
           </nav>
         </ScrollArea>
       </SidebarContent>

@@ -1,6 +1,6 @@
 /* src/layouts/AppShell.tsx */
 import { SidebarProvider } from "@/components/ui/sidebar";
-import AppSidebar from "@/components/common/AppSidebar";
+import {AppSidebar} from "@/components/app-sidebar";
 import { Outlet } from "react-router-dom";
 
 export default function AppShell() {
@@ -8,7 +8,8 @@ export default function AppShell() {
     <SidebarProvider>
         {/* Take up the entire screen */}
       <div className="flex h-screen w-screen overflow ">
-        <AppSidebar />
+        {/* <AppSidebar /> */}
+        <AppSidebar/>
         {/* Give content room when the sidebar is visible on ≥md */}
         <main className="flex-1">
           <Outlet />

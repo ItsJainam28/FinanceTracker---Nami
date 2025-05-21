@@ -12,13 +12,13 @@ import {
 interface Props {
   open: boolean;
   onClose: () => void;
-  initial: { name: string; amount: number; date: string; categoryId: string };
+  initial: { name: string; amount: number; date: string; categoryId: string | undefined };
   categories: { _id: string; name: string }[];
   onSave: (data: {
     name: string;
     amount: number;
     date: string;
-    categoryId: string;
+    categoryId: string | undefined;
   }) => Promise<void>;
 }
 

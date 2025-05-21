@@ -6,11 +6,6 @@ const expenseSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  budgetId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Budget',
-    required: false,
-  },
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
@@ -31,6 +26,11 @@ const expenseSchema = new mongoose.Schema({
   isRecurring: {
     type: Boolean,
     default: false,
+  },
+  recurringId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RecurringExpense',
+    required: false,
   },
 }, { timestamps: true });
 

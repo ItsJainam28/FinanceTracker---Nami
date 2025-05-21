@@ -1,8 +1,8 @@
 const cron = require("node-cron");
 const RecurringExpense = require("../models/recurringExpense.js");
 const Expense = require("../models/expense.js");
+const RecurringBudget = require("../models/recurringBudget.js");
 const Budget = require("../models/budget.js");
-
 
 const runScheduledTasks = () => {
   cron.schedule("0 1 * * *", async () => {
@@ -11,60 +11,86 @@ const runScheduledTasks = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 🔄 Scheduled Expenses → Real Expense
+    // 🔄 Process Recurring Expenses
     const scheduledExpenses = await RecurringExpense.find({
-      nextTriggerDate: { $lte: today },
-      isActive: true,
+      nextTriggerDate: today,
+      startDate: { $lte: today },
+      $or: [{ endDate: null }, { endDate: { $gte: today } }],
     });
 
     for (const rec of scheduledExpenses) {
-      const newExpense = new Expense({
-        userId: rec.userId,
-        name: rec.name,
-        amount: rec.amount,
-        date: new Date(), // today's date
-        categoryId: rec.categoryId || null,
-        budgetId: rec.budgetId || null,
-        isRecurring: true,
-      });
-      await newExpense.save();
-
-      // move nextTriggerDate 1 month forward
+      // Move nextTriggerDate forward regardless of active state
       const next = new Date(rec.nextTriggerDate);
       next.setMonth(next.getMonth() + 1);
       rec.nextTriggerDate = next;
+
+      if (rec.isActive) {
+        // Check for existing logged expense
+        const existing = await Expense.findOne({
+          userId: rec.userId,
+          date: today,
+          fromRecurringId: rec._id,
+          isRecurring: true,
+        });
+
+        if (!existing) {
+          await Expense.create({
+            userId: rec.userId,
+            name: rec.name,
+            amount: rec.amount,
+            date: today,
+            categoryId: rec.categoryId || null,
+            budgetId: rec.budgetId || null,
+            isRecurring: true,
+            fromRecurringId: rec._id,
+          });
+        }
+      }
+
       await rec.save();
     }
 
-    // 🔄 Scheduled Budgets → New Monthly Budget
-    // 🔄 Budgets marked as recurring → New Monthly Budget
-    const recurringBudgets = await Budget.find({
-      isRecurring: true,
+    // 🔄 Process Recurring Budgets
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const recurringBudgets = await RecurringBudget.find({
+      isActive: true,
+      $or: [
+        { endMonth: null, endYear: null },
+        {
+          $expr: {
+            $or: [
+              { $gt: ["$endYear", currentYear] },
+              {
+                $and: [
+                  { $eq: ["$endYear", currentYear] },
+                  { $gte: ["$endMonth", currentMonth] },
+                ],
+              },
+            ],
+          },
+        },
+      ],
     });
 
     for (const rec of recurringBudgets) {
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-
-      // check if this user already has same budget for this month/year
       const exists = await Budget.findOne({
-        userId: rec.userId,
-        name: rec.name,
+        recurringBudgetId: rec._id,
         month: currentMonth,
         year: currentYear,
       });
 
       if (!exists) {
-        const newBudget = new Budget({
+        await Budget.create({
           userId: rec.userId,
-          name: rec.name,
+          recurringBudgetId: rec._id,
           amount: rec.amount,
-          isRecurring: true,
+          categories: rec.categories,
           month: currentMonth,
           year: currentYear,
         });
-        await newBudget.save();
       }
     }
 
@@ -72,4 +98,4 @@ const runScheduledTasks = () => {
   });
 };
 
-export default runScheduledTasks;
+module.exports = runScheduledTasks;
