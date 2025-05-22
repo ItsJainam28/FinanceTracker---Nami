@@ -1,6 +1,7 @@
 const RecurringBudget = require("../models/recurringBudget");
 const Budget = require("../models/budget");
 
+
 // 1. Create a new recurring budget
 const createRecurringBudget = async (req, res) => {
   try {
@@ -174,10 +175,11 @@ const updateRecurringBudget = async (req, res) => {
 
     // Update the current month's budget (if it exists)
     const today = new Date();
-    const currentMonth = today.getMonth();
+    const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
-
-    await Budget.updateOne(
+    console.log("Current Month:", currentMonth);
+    console.log("Current Year:", currentYear);
+    const newsres = await Budget.updateOne(
       {
         recurringBudgetId: id,
         month: currentMonth,
@@ -190,7 +192,7 @@ const updateRecurringBudget = async (req, res) => {
         },
       }
     );
-
+    console.log("Budget Update Result:", newsres);
     res.json({ message: "Recurring budget updated successfully" });
   } catch (err) {
     console.error("Error updating recurring budget:", err);

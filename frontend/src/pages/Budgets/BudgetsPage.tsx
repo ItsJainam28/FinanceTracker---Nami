@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import BudgetStatsModal from "@/components/budget/BudgetStatsModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-
+import EditRecurringBudgetModal from "@/components/budget/EditRecurringBudgetModal";
 interface RecurringBudget {
   _id: string;
   name: string;
@@ -43,6 +43,8 @@ export default function BudgetPage() {
   const [pendingDeactivateId, setPendingDeactivateId] = useState<string | null>(
     null
   );
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingBudget, setEditingBudget] = useState<RecurringBudget | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -174,6 +176,13 @@ export default function BudgetPage() {
               </div>
 
               <div className="flex justify-end gap-2 mt-4">
+              <Button
+                size="sm"
+                onClick={() => setEditingBudget(b)}
+                className="z-10 bg-white text-black rounded-md hover:bg-gray-200"
+              >
+                Edit
+              </Button>
                 <Button
                   size="sm"
                   onClick={() => confirmDeactivate(b._id)}
@@ -329,6 +338,17 @@ export default function BudgetPage() {
         description="This will stop future budgets and archive upcoming ones."
         onConfirm={doDeactivate}
       />
+      {editingBudget && (
+  <EditRecurringBudgetModal
+    open={!!editingBudget}
+    onClose={() => setEditingBudget(null)}
+    budget={editingBudget}
+    categories={categories}
+    onUpdated={fetchData}
+/>
+)}
+
     </div>
+    
   );
 }

@@ -15,8 +15,8 @@ import {
   SquareTerminal,
 } from "lucide-react"
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/sidebar/nav-main"
+import { NavUser } from "@/components/sidebar/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -26,7 +26,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { navItems } from "@/components/nav-items"
+import { navItems } from "@/components/sidebar/nav-items"
 
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

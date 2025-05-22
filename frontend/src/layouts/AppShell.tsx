@@ -1,6 +1,6 @@
 /* src/layouts/AppShell.tsx */
 import { SidebarProvider } from "@/components/ui/sidebar";
-import {AppSidebar} from "@/components/app-sidebar";
+import {AppSidebar} from "@/components/sidebar/app-sidebar";
 import { Outlet } from "react-router-dom";
 
 export default function AppShell() {
