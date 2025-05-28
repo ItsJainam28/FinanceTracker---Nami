@@ -1,14 +1,15 @@
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   createRecurringBudget,
   deactivateRecurringBudget,
   updateRecurringBudgetEndDate,
   getActiveRecurringBudgets,
   getArchivedRecurringBudgets,
   updateRecurringBudget
-} = require("../controllers/recurringBudgetController");
-const { protect } = require("../middleware/authMiddleware");
+} from "../controllers/recurringBudgetController.js";
+import { protect } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
 
 // POST: Create a recurring budget
 router.post("/", protect, createRecurringBudget);
@@ -28,4 +29,4 @@ router.patch("/:id/end-date", protect, updateRecurringBudgetEndDate);
 // PATCH: Deactivate a recurring budget
 router.patch("/:id/deactivate", protect, deactivateRecurringBudget);
 
-module.exports = router;
+export default router;

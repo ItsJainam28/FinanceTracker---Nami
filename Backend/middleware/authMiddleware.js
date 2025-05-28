@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+import jwt from 'jsonwebtoken';
+import User from '../models/user.js';
 
 // Middleware to protect private routes
 const protect = async (req, res, next) => {
@@ -15,18 +15,15 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       req.user = await User.findById(decoded.id).select('-password'); // attach user data except password
-   
-      next();
 
+      return next();
     } catch (error) {
       console.error(error);
-      res.status(401).json({ error: 'Not authorized, token failed' });
+      return res.status(401).json({ error: 'Not authorized, token failed' });
     }
   }
 
-  if (!token) {
-    res.status(401).json({ error: 'Not authorized, no token' });
-  }
+  return res.status(401).json({ error: 'Not authorized, no token' });
 };
 
-module.exports = { protect };
+export { protect };

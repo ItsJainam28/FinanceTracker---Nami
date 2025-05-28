@@ -1,13 +1,14 @@
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   getBudgetsForRecurring,
   getCurrentMonthBudgets,
   getArchivedRecurringBudgets,
   getRecurringBudgetsWithCurrentMonthUsage,
   getBudgetMonthSummary,
-} = require("../controllers/budgetController");
-const {protect} = require("../middleware/authMiddleware");
+} from "../controllers/budgetController.js";
+import { protect } from "../middleware/authMiddleware.js";
+
+const router = express.Router();
 
 // GET: Budgets linked to a recurring budget (timeline)
 router.get("/recurring/:id/timeline", protect, getBudgetsForRecurring);
@@ -24,4 +25,4 @@ router.get("/with-usage", protect, getRecurringBudgetsWithCurrentMonthUsage);
 // GET: Budget month summary
 router.get("/:id/month-summary", protect, getBudgetMonthSummary);
 
-module.exports = router;
+export default router;

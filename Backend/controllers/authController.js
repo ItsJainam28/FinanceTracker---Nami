@@ -1,5 +1,5 @@
-const User = require('../models/user');
-const jwt = require('jsonwebtoken');
+import User from '../models/user.js';
+import jwt from 'jsonwebtoken';
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -77,7 +77,7 @@ const loginUser = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-    const { firstname, lastname, email } = req.user; // req.user is populated by auth middleware
+    const { firstname, lastname, email } = req.user;
     res.status(200).json({ firstname, lastname, email });
   } catch (error) {
     console.error(error);
@@ -85,6 +85,8 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = {
-  registerUser, loginUser, getMe 
+export {
+  registerUser,
+  loginUser,
+  getMe
 };

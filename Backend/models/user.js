@@ -1,35 +1,38 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 // Define the User Schema
-const userSchema = new mongoose.Schema({
-  firstname: {
-    type: String,
-    required: [true, 'First name is required'],
-    trim: true
+const userSchema = new mongoose.Schema(
+  {
+    firstname: {
+      type: String,
+      required: [true, 'First name is required'],
+      trim: true,
+    },
+    lastname: {
+      type: String,
+      required: [true, 'Last name is required'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: 6,
+    },
+    currency: {
+      type: String,
+      default: 'USD',
+    },
   },
-  lastname: {
-    type: String,
-    required: [true, 'Last name is required'],
-    trim: true
-  },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 6
-  },
-  currency: {
-    type: String,
-    default: 'USD' // You can allow user to select currency later
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 // Encrypt password before saving
 userSchema.pre('save', async function (next) {
@@ -48,5 +51,4 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+export default User;

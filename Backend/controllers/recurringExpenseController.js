@@ -1,16 +1,12 @@
-const RecurringExpense = require("../models/recurringExpense");
-const Expense = require("../models/expense");
-
-
+import RecurringExpense from "../models/recurringExpense.js";
+import Expense from "../models/expense.js";
 
 const createRecurringExpense = async (req, res) => {
   try {
     const { name, amount, categoryId, startDate, endDate, logIfPast } = req.body;
-
     const userId = req.user._id;
 
     const start = new Date(startDate);
-    console.log("Start date:", start);
     start.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -28,10 +24,9 @@ const createRecurringExpense = async (req, res) => {
 
     await recurring.save();
 
-    // ✅ If startDate is in the past but within current month and user wants to log it
     const isPastInCurrentMonth =
       start < today &&
-      start.getMonth() === today.getMonth() 
+      start.getMonth() === today.getMonth() &&
       start.getFullYear() === today.getFullYear();
 
     if (isPastInCurrentMonth && logIfPast) {
@@ -45,7 +40,6 @@ const createRecurringExpense = async (req, res) => {
         recurringId: recurring._id,
       });
 
-      // Shift next trigger date by 1 month
       const next = new Date(start);
       next.setMonth(next.getMonth() + 1);
       recurring.nextTriggerDate = next;
@@ -61,7 +55,6 @@ const createRecurringExpense = async (req, res) => {
 
 const getAllRecurringExpenses = async (req, res) => {
   try {
-
     const data = await RecurringExpense.find({ userId: req.user._id });
     res.status(200).json(data);
   } catch (err) {
@@ -109,7 +102,6 @@ const updateRecurringExpense = async (req, res) => {
 
 const deleteRecurringExpense = async (req, res) => {
   try {
-   
     const deleted = await RecurringExpense.findOneAndDelete({
       _id: req.params.id,
       userId: req.user._id,
@@ -143,7 +135,6 @@ const toggleRecurringStatus = async (req, res) => {
 
 const getSummary = async (req, res) => {
   try {
-   
     const userId = req.user._id;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -157,19 +148,15 @@ const getSummary = async (req, res) => {
         { endDate: { $gte: today } }
       ],
     });
-    
 
-    // Total monthly recurring
     const totalMonthlySpend = recurringExpenses.reduce((sum, r) => sum + r.amount, 0);
 
-    // Next payment
     const sorted = [...recurringExpenses].sort(
       (a, b) => new Date(a.nextTriggerDate) - new Date(b.nextTriggerDate)
     );
 
     const next = sorted[0];
 
-    // Upcoming in next 7 days
     const weekFromNow = new Date(today);
     weekFromNow.setDate(today.getDate() + 7);
 
@@ -194,9 +181,7 @@ const getSummary = async (req, res) => {
   }
 };
 
-
-
-module.exports = {
+export {
   createRecurringExpense,
   getAllRecurringExpenses,
   getSingleRecurringExpense,

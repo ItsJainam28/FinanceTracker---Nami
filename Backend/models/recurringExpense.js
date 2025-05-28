@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const recurringExpenseSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -14,4 +14,4 @@ const recurringExpenseSchema = new mongoose.Schema({
 });
 
 const RecurringExpense = mongoose.model("RecurringExpense", recurringExpenseSchema);
-module.exports = RecurringExpense;
+export default RecurringExpense;

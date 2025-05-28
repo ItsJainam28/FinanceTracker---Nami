@@ -1,19 +1,16 @@
-const RecurringBudget = require("../models/recurringBudget");
-const Budget = require("../models/budget");
-
+import RecurringBudget from "../models/recurringBudget.js";
+import Budget from "../models/budget.js";
 
 // 1. Create a new recurring budget
 const createRecurringBudget = async (req, res) => {
   try {
     const { name, categories, amount, endMonth, endYear } = req.body;
-    console.log("Request Body:", req.body);
     const userId = req.user._id;
 
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    // Prevent end date in the past
     if (endMonth && endYear) {
       if (
         endYear < currentYear ||
@@ -25,7 +22,6 @@ const createRecurringBudget = async (req, res) => {
       }
     }
 
-    // Prevent duplicate category set
     const allActive = await RecurringBudget.find({ userId, isActive: true });
 
     const isDuplicate = allActive.some((r) => {
@@ -44,8 +40,6 @@ const createRecurringBudget = async (req, res) => {
         .json({ error: "A budget for these categories already exists." });
     }
 
-    
-    // Create recurring budget
     const recurring = new RecurringBudget({
       userId,
       name,
@@ -58,7 +52,6 @@ const createRecurringBudget = async (req, res) => {
     });
     await recurring.save();
 
-    // Also create current month budget
     const budget = new Budget({
       userId,
       recurringBudgetId: recurring._id,
@@ -158,6 +151,7 @@ const updateRecurringBudgetEndDate = async (req, res) => {
   }
 };
 
+// 4. Update recurring budget's name/amount/categories + current month's budget
 const updateRecurringBudget = async (req, res) => {
   try {
     const { name, amount, categories } = req.body;
@@ -167,19 +161,16 @@ const updateRecurringBudget = async (req, res) => {
     const recurring = await RecurringBudget.findOne({ _id: id, userId });
     if (!recurring) return res.status(404).json({ error: "Budget not found" });
 
-    // Update recurring budget fields
     recurring.name = name;
     recurring.amount = amount;
     recurring.categories = categories;
     await recurring.save();
 
-    // Update the current month's budget (if it exists)
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
-    console.log("Current Month:", currentMonth);
-    console.log("Current Year:", currentYear);
-    const newsres = await Budget.updateOne(
+
+    await Budget.updateOne(
       {
         recurringBudgetId: id,
         month: currentMonth,
@@ -192,7 +183,7 @@ const updateRecurringBudget = async (req, res) => {
         },
       }
     );
-    console.log("Budget Update Result:", newsres);
+
     res.json({ message: "Recurring budget updated successfully" });
   } catch (err) {
     console.error("Error updating recurring budget:", err);
@@ -200,7 +191,7 @@ const updateRecurringBudget = async (req, res) => {
   }
 };
 
-// 4. Get active recurring budgets
+// 5. Get active recurring budgets
 const getActiveRecurringBudgets = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -229,7 +220,7 @@ const getActiveRecurringBudgets = async (req, res) => {
   }
 };
 
-// 5. Get archived recurring budgets
+// 6. Get archived recurring budgets
 const getArchivedRecurringBudgets = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -258,9 +249,7 @@ const getArchivedRecurringBudgets = async (req, res) => {
   }
 };
 
-//Maake a route to get calculated current month budgets expense of all Recurring Budget
-
-module.exports = {
+export {
   createRecurringBudget,
   deactivateRecurringBudget,
   updateRecurringBudgetEndDate,

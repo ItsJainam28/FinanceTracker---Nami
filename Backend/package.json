@@ -11,11 +11,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@langchain/core": "^0.3.57",
+    "@langchain/langgraph": "^0.2.73",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
+    "chrono-node": "^2.3.4",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.27",
     "mongoose": "^8.14.0",
     "node-cron": "^3.0.3"
   }

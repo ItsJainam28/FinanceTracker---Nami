@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   createRecurringExpense,
   getAllRecurringExpenses,
   getSingleRecurringExpense,
@@ -7,9 +7,10 @@ const {
   deleteRecurringExpense,
   toggleRecurringStatus,
   getSummary,
-} = require("../controllers/recurringExpenseController.js");
+} from "../controllers/recurringExpenseController.js";
 
-const { protect } = require("../middleware/authMiddleware.js");
+import { protect } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
 router.post("/", protect, createRecurringExpense);
@@ -20,4 +21,4 @@ router.get("/:id", protect, getSingleRecurringExpense); // ❗ AFTER "/summary"
 router.patch("/:id", protect, updateRecurringExpense);
 router.delete("/:id", protect, deleteRecurringExpense);
 
-module.exports = router;
+export default router;

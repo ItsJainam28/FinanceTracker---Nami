@@ -1,9 +1,8 @@
-// controllers/budgetController.js
-
-const RecurringBudget = require("../models/recurringBudget");
-const Budget = require("../models/budget");
-const Expense = require("../models/expense");
-const mongoose = require("mongoose");
+import RecurringBudget from "../models/recurringBudget.js";
+import Budget from "../models/budget.js";
+import Expense from "../models/expense.js";
+import Category from "../models/category.js";
+import mongoose from "mongoose";
 
 // Helper: get start & end of a month
 const getMonthRange = (year, month) => {
@@ -71,7 +70,6 @@ const getRecurringBudgetsWithCurrentMonthUsage = async (req, res) => {
     const currentYear = now.getFullYear();
     const userId = req.user._id;
 
-    // Get active recurring budgets for the user with start month less than or equal to current month and end month greater than or equal to current month
     const recurringBudgets = await RecurringBudget.find({
       userId,
       isActive: true,
@@ -85,7 +83,7 @@ const getRecurringBudgetsWithCurrentMonthUsage = async (req, res) => {
         },
       ],
     }).sort({ createdAt: -1 });
-    console.log("Recurring Budgets:", recurringBudgets);
+
     const recurringIds = recurringBudgets.map((r) => r._id);
 
     const budgets = await Budget.find({
@@ -129,8 +127,6 @@ const getRecurringBudgetsWithCurrentMonthUsage = async (req, res) => {
 };
 
 // 5. Get full summary for a specific budget in a month
-const Category = require("../models/category");
-
 const getBudgetMonthSummary = async (req, res) => {
   try {
     const { id } = req.params;
@@ -220,7 +216,8 @@ const getBudgetMonthSummary = async (req, res) => {
     res.status(500).json({ error: "Failed to load budget summary" });
   }
 };
-module.exports = {
+
+export {
   getBudgetsForRecurring,
   getCurrentMonthBudgets,
   getArchivedRecurringBudgets,

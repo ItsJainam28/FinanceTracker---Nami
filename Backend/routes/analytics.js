@@ -1,12 +1,11 @@
-const express = require("express");
+import express from "express";
+import { getAnalyticsSummary, getBudgetTracking, getCumulativeSpending } from "../controllers/analyticsController.js";
+import { protect } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-const { getAnalyticsSummary, getBudgetTracking, getCumulativeSpending } = require("../controllers/analyticsController");
-const { protect } = require("../middleware/authMiddleware");
 
+router.get("/summary", protect, getAnalyticsSummary);
+router.get("/budget-tracking", protect, getBudgetTracking);
+router.get("/cumulative", protect, getCumulativeSpending);
 
-router.get("/summary",protect ,getAnalyticsSummary);
-router.get("/budget-tracking", protect,getBudgetTracking);
-router.get("/cumulative", protect,getCumulativeSpending);
-
-
-module.exports = router;
+export default router;

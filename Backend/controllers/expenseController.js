@@ -1,4 +1,4 @@
-const Expense = require('../models/expense');
+import Expense from '../models/expense.js';
 
 // @desc    Create a new expense
 // @route   POST /api/expenses
@@ -27,11 +27,9 @@ const createExpense = async (req, res) => {
 // @desc    Get all expenses for user
 const getExpenses = async (req, res) => {
   try {
-    // 1. Parse pagination
     const page  = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.max(1, parseInt(req.query.limit, 10) || 25);
 
-    // 2. Build filter object
     const filter = { userId: req.user.id };
 
     if (req.query.search) {
@@ -55,22 +53,18 @@ const getExpenses = async (req, res) => {
       filter.isRecurring = req.query.recurring === 'true';
     }
 
-    // 3. Determine sort
     const sortableFields = ['date','amount','name','categoryId','isRecurring'];
-    let sortBy    = sortableFields.includes(req.query.sortBy) ? req.query.sortBy : 'date';
-    let sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+    const sortBy    = sortableFields.includes(req.query.sortBy) ? req.query.sortBy : 'date';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
 
-    // 4. Count total matching documents
     const total = await Expense.countDocuments(filter);
 
-    // 5. Fetch paginated results
     const data = await Expense.find(filter)
       .sort({ [sortBy]: sortOrder })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();
 
-    // 6. Return payload
     return res.json({
       data,
       meta: {
@@ -155,11 +149,11 @@ const bulkDeleteExpenses = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createExpense,
   getExpenses,
   getExpenseById,
   updateExpense,
   deleteExpense,
-  bulkDeleteExpenses
+  bulkDeleteExpenses,
 };

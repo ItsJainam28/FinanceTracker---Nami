@@ -1,10 +1,13 @@
-const Expense = require("../models/expense");
-const RecurringExpense = require("../models/recurringExpense");
-const mongoose = require("mongoose");
+import Expense from "../models/expense.js";
+import RecurringExpense from "../models/recurringExpense.js";
+import Budget from "../models/budget.js";
+import mongoose from "mongoose";
+
 const monthRange = (y, m) => ({
   start: new Date(y, m, 1),
   end: new Date(y, m + 1, 0, 23, 59, 59),
 });
+
 const getAnalyticsSummary = async (req, res) => {
   try {
     const now = new Date();
@@ -21,7 +24,6 @@ const getAnalyticsSummary = async (req, res) => {
       };
     });
 
-    // Optimized single aggregation for topCategories, dailyTrend, totalSpending
     const [summaryAgg] = await Expense.aggregate([
       { $match: { userId: req.user._id } },
       {
@@ -50,7 +52,6 @@ const getAnalyticsSummary = async (req, res) => {
       },
     ]);
 
-    // Parallel monthly comparison (last 6 months)
     const monthlyComparison = await Promise.all(
       monthRanges.map(async ({ label, start, end }) => {
         const agg = await Expense.aggregate([
@@ -69,7 +70,6 @@ const getAnalyticsSummary = async (req, res) => {
       })
     );
 
-    // Top 5 largest expenses this month
     const largestExpenses = await Expense.find({
       userId: req.user._id,
       date: { $gte: startOfMonth },
@@ -77,7 +77,6 @@ const getAnalyticsSummary = async (req, res) => {
       .sort({ amount: -1 })
       .limit(5);
 
-    // Upcoming recurring expenses in next 14 days
     const in14 = new Date();
     in14.setDate(in14.getDate() + 14);
     const upcoming = await RecurringExpense.find({
@@ -92,7 +91,6 @@ const getAnalyticsSummary = async (req, res) => {
       dueDate: e.nextTriggerDate.toISOString().split("T")[0],
     }));
 
-    // Safe extraction of top-level data
     const totalSpending = summaryAgg.totalSpending?.[0]?.total || 0;
 
     res.json({
@@ -109,9 +107,6 @@ const getAnalyticsSummary = async (req, res) => {
   }
 };
 
-
-const Budget = require("../models/budget");
-
 const getBudgetTracking = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -119,7 +114,6 @@ const getBudgetTracking = async (req, res) => {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    // Get budgets for current month
     const budgets = await Budget.find({
       userId,
       month: currentMonth,
@@ -127,7 +121,6 @@ const getBudgetTracking = async (req, res) => {
       isArchived: false,
     });
 
-    // Map category -> budget amount
     const categoryBudgetMap = {};
 
     budgets.forEach((b) => {
@@ -138,7 +131,6 @@ const getBudgetTracking = async (req, res) => {
       });
     });
 
-    // Aggregate expenses by category
     const { start, end } = {
       start: new Date(currentYear, currentMonth - 1, 1),
       end: new Date(currentYear, currentMonth, 0, 23, 59, 59),
@@ -149,7 +141,9 @@ const getBudgetTracking = async (req, res) => {
         $match: {
           userId,
           date: { $gte: start, $lte: end },
-          categoryId: { $in: Object.keys(categoryBudgetMap).map(id => new mongoose.Types.ObjectId(id)) },
+          categoryId: {
+            $in: Object.keys(categoryBudgetMap).map((id) => new mongoose.Types.ObjectId(id)),
+          },
         },
       },
       {
@@ -161,7 +155,7 @@ const getBudgetTracking = async (req, res) => {
     ]);
 
     const result = Object.entries(categoryBudgetMap).map(([categoryId, budget]) => {
-      const match = expensesAgg.find(e => String(e._id) === categoryId);
+      const match = expensesAgg.find((e) => String(e._id) === categoryId);
       return {
         categoryId,
         budget: Math.round(budget * 100) / 100,
@@ -202,7 +196,6 @@ const getCumulativeSpending = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Build cumulative array
     const output = [];
     let runningTotal = 0;
     raw.forEach((entry) => {
@@ -217,5 +210,4 @@ const getCumulativeSpending = async (req, res) => {
   }
 };
 
-
-module.exports = { getAnalyticsSummary, getBudgetTracking, getCumulativeSpending };
+export { getAnalyticsSummary, getBudgetTracking, getCumulativeSpending };

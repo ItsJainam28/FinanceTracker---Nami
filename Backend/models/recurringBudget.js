@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const recurringBudgetSchema = new mongoose.Schema(
   {
@@ -7,7 +7,7 @@ const recurringBudgetSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    name:{
+    name: {
       type: String,
       required: true,
     },
@@ -44,6 +44,5 @@ const recurringBudgetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-
-module.exports = mongoose.model("RecurringBudget", recurringBudgetSchema);
+const RecurringBudget = mongoose.model("RecurringBudget", recurringBudgetSchema);
+export default RecurringBudget;

@@ -1,8 +1,8 @@
-const cron = require("node-cron");
-const RecurringExpense = require("../models/recurringExpense.js");
-const Expense = require("../models/expense.js");
-const RecurringBudget = require("../models/recurringBudget.js");
-const Budget = require("../models/budget.js");
+import cron from "node-cron";
+import RecurringExpense from "../models/recurringExpense.js";
+import Expense from "../models/expense.js";
+import RecurringBudget from "../models/recurringBudget.js";
+import Budget from "../models/budget.js";
 
 const runScheduledTasks = () => {
   cron.schedule("0 1 * * *", async () => {
@@ -25,7 +25,6 @@ const runScheduledTasks = () => {
       rec.nextTriggerDate = next;
 
       if (rec.isActive) {
-        // Check for existing logged expense
         const existing = await Expense.findOne({
           userId: rec.userId,
           date: today,
@@ -98,4 +97,4 @@ const runScheduledTasks = () => {
   });
 };
 
-module.exports = runScheduledTasks;
+export default runScheduledTasks;
