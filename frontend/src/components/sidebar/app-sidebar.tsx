@@ -3,16 +3,10 @@ import { useEffect, useState } from "react";
 import api from "@/api/axiosInstance"; // your existing Axios instance
 
 import {
-  BookOpen,
   Bot,
   Command,
-  Frame,
-  LifeBuoy,
-  Map,
-  PieChart,
-  Send,
-  Settings2,
-  SquareTerminal,
+  LucideIcon,
+  MessageSquare,
 } from "lucide-react"
 
 import { NavMain } from "@/components/sidebar/nav-main"
@@ -27,7 +21,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { navItems } from "@/components/sidebar/nav-items"
-
+import { createChatSession, getChatSessions, ChatSession } from "@/api/assistant";
+import { useNavigate } from "react-router-dom";
+import { NavProjects } from "./nav-projects";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = useState({
@@ -35,7 +31,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     email: "user@example.com",
     avatar: "/avatars/user.jpg",
   });
+
+  const navigate = useNavigate();
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        const response = await getChatSessions();
+        console.log('Fetched sessions:', response.data.data);
+        setSessions(response.data.data);
+      } catch (error) {
+        console.error('Failed to load sessions:', error);
+        setSessions([]); // Fallback to empty array
+      }
+    };
+    
+    loadSessions();
+  }, []);
+
+  const handleNewChat = async () => {
+    try {
+      const { data } = await createChatSession();
+      console.log("New chat session created:", data.data._id);
+      navigate(`/chat/${data.data._id}`);
+    } catch (err) {
+      console.error("Failed to start new chat:", err);
+    }
+  };
+
+  const projectsData = sessions.map(session => ({
+    name: session.title,
+    url: `/chat/${session._id}`, 
+    icon: MessageSquare 
+  }));
   
+
   useEffect(() => {
     (async () => {
       try {
@@ -73,8 +104,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent >
-        <NavMain items={navItems}  />
+      <SidebarContent>
+        <NavMain items={navItems} />
+        <NavProjects projects={projectsData} onNewChat={handleNewChat} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

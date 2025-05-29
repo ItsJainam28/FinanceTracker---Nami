@@ -35,6 +35,30 @@ export const getSessions = async (req, res, next) => {
   }
 };
 
+// Fetch a single chat session by ID
+export const getSession = async (req, res, next) => {
+  try {
+    const { id: sessionId } = req.params;
+
+    // Optional: validate ownership
+    const session = await ChatSession.findOne({
+      _id: sessionId,
+      userId: req.user._id,
+    });
+
+    if (!session) {
+      return res.status(404).json({ success: false, error: "Session not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: session,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 /* Fetch full message history for a session */
 export const getSessionMessages = async (req, res, next) => {
   try {

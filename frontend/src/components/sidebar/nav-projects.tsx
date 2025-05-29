@@ -25,19 +25,27 @@ import {
 
 export function NavProjects({
   projects,
+  onNewChat,
 }: {
   projects: {
     name: string
     url: string
     icon: LucideIcon
   }[]
+  onNewChat: () => void
 }) {
+
   const { isMobile } = useSidebar()
 
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
-      <SidebarMenu>
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden flex flex-col min-h-0">
+      <SidebarGroupLabel>Ask Nami</SidebarGroupLabel>
+      <SidebarMenu className="flex-1 overflow-y-auto max-h-[calc(100vh-300px)] custom-scroll">
+        <SidebarMenuItem>
+          <SidebarMenuButton onClick={onNewChat}>
+            <span className="font-medium text-sm">➕ New Chat</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
@@ -75,12 +83,7 @@ export function NavProjects({
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton>
-            <MoreHorizontal />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+      
       </SidebarMenu>
     </SidebarGroup>
   )
