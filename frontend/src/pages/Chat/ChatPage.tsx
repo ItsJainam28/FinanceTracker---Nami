@@ -1,5 +1,5 @@
 // pages/ChatPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { getChatSession, getChatMessages, ChatSession, ChatMessage } from '@/api/assistant';
@@ -12,6 +12,10 @@ export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleMessagesUpdate = (newMessages: ChatMessage[]) => {
+    setMessages(newMessages);
+  };
 
   useEffect(() => {
     const loadChatData = async () => {
@@ -90,7 +94,7 @@ export function ChatPage() {
       <ChatInterface 
         session={session}
         initialMessages={messages}
-        onMessagesUpdate={setMessages}
+        onMessagesUpdate={handleMessagesUpdate}
       />
     </div>
   );
