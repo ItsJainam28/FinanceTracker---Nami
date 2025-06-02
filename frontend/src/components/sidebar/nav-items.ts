@@ -11,7 +11,7 @@ import {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboardIcon,
-      isActive: true,
+  
     },
     {
       title: "Budgets",

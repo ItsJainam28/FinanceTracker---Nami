@@ -28,17 +28,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import EditExpenseModal  from "./EditExpenseModal";
+import { CalendarIcon, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import EditExpenseModal from "./EditExpenseModal";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 
-
-export const ExpenseTable: React.FC= ({
-}) => {
+export const ExpenseTable: React.FC = () => {
   const [params, setParams] = useState<ExpensesListParams>({
     page: 1,
     limit: 25,
   });
+  
+  // Ensure limit always has a default value
+  const currentLimit = params.limit ?? 25;
   const [categories, setCategories] = useState<Category[]>([]);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [showAmountFilter, setShowAmountFilter] = useState(false);
@@ -47,13 +48,14 @@ export const ExpenseTable: React.FC= ({
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   // Fetch categories for the dropdown
   const { data: categoriesData } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: () => listCategories().then((res) => res.data),
   });
+  
   React.useEffect(() => {
     if (categoriesData) {
       setCategories(categoriesData);
@@ -65,11 +67,13 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
     acc[category._id] = category.name;
     return acc;
   }, {} as Record<string, string>);
-  const { data, status, error , refetch} = useQuery<PaginatedResponse<Expense>>({
+  
+  const { data, status, error, refetch } = useQuery<PaginatedResponse<Expense>>({
     queryKey: ["expenses", params],
     queryFn: () => listExpenses(params).then((res) => res.data),
     placeholderData: keepPreviousData,
   });
+  
   const isLoading = status === "pending";
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -239,12 +243,14 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
   };
 
   return (
-    <div className="bg-black text-white border border-white rounded-xl shadow-md p-6 space-y-6">
-      {/* Top controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
+    <div className="bg-card border border-border rounded-lg shadow-sm">
+      {/* Filters */}
+      <div className="p-6 space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            className="bg-black text-white border-white placeholder:text-gray-400"
+            className="pl-10"
             placeholder="Search expenses..."
             onChange={(e) =>
               setParams((prev) => ({
@@ -255,11 +261,14 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
             }
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex space-x-2">
+
+        {/* Filter Row */}
+        <div className="flex flex-wrap gap-3">
+          {/* Date Filter */}
+          <div className="flex flex-col space-y-2">
             <select
               onChange={handleDateRangeChange}
-              className="bg-black text-white border border-white rounded px-2 py-1"
+              className="h-10 px-3 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Date: Any time</option>
               <option value="today">Today</option>
@@ -273,66 +282,61 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
             </select>
 
             {showDateFilter && (
-              <div className="flex items-center gap-2 ml-2">
-                <div className="flex items-center gap-1">
-                  <span className="text-sm">From:</span>
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">From:</span>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-auto pl-3 pr-2 py-1 h-8 border-white text-white"
-                      >
+                      <Button variant="outline" size="sm" className="w-auto">
                         {fromDate ? (
-                          format(fromDate, "PP")
+                          format(fromDate, "MMM dd, yyyy")
                         ) : (
-                          <span className="text-gray-400">Pick date</span>
+                          <span className="text-muted-foreground">Pick date</span>
                         )}
                         <CalendarIcon className="ml-2 h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-black border border-white">
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={fromDate}
                         onSelect={(date) => handleCustomDateChange('from', date)}
-                        className="bg-black text-white"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <span className="text-sm">To:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">To:</span>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-auto pl-3 pr-2 py-1 h-8 border-white text-white"
-                      >
+                      <Button variant="outline" size="sm" className="w-auto">
                         {toDate ? (
-                          format(toDate, "PP")
+                          format(toDate, "MMM dd, yyyy")
                         ) : (
-                          <span className="text-gray-400">Pick date</span>
+                          <span className="text-muted-foreground">Pick date</span>
                         )}
                         <CalendarIcon className="ml-2 h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-black border border-white">
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={toDate}
                         onSelect={(date) => handleCustomDateChange('to', date)}
-                        className="bg-black text-white"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
               </div>
             )}
+          </div>
 
+          {/* Amount Filter */}
+          <div className="flex flex-col space-y-2">
             <select
               onChange={handleAmountRangeChange}
-              className="bg-black text-white border border-white rounded px-2 py-1"
+              className="h-10 px-3 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Amount: Any</option>
               <option value="under10">Under $10</option>
@@ -345,101 +349,137 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
             </select>
 
             {showAmountFilter && (
-              <div className="flex items-center gap-2 ml-2">
-                <span className="text-sm">$</span>
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
+                <span className="text-sm font-medium">$</span>
                 <Input
                   type="number"
                   placeholder="Min"
-                  className="bg-black text-white border border-white rounded px-2 py-1 w-24"
+                  className="w-24"
                   onChange={(e) => handleCustomAmountChange('min', e.target.value)}
                 />
-                <span className="text-sm">to</span>
+                <span className="text-sm text-muted-foreground">to</span>
                 <Input
                   type="number"
                   placeholder="Max"
-                  className="bg-black text-white border border-white rounded px-2 py-1 w-24"
+                  className="w-24"
                   onChange={(e) => handleCustomAmountChange('max', e.target.value)}
                 />
               </div>
             )}
-
-            <select
-              onChange={handleCategoryChange}
-              className="bg-black text-white border border-white rounded px-2 py-1"
-            >
-              <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category._id} value={category._id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              onChange={handleRecurringChange}
-              className="bg-black text-white border border-white rounded px-2 py-1"
-            >
-              <option value="">All</option>
-              <option value="true">Recurring</option>
-              <option value="false">One-time</option>
-            </select>
           </div>
+
+          {/* Category Filter */}
+          <select
+            onChange={handleCategoryChange}
+            className="h-10 px-3 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All Categories</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Recurring Filter */}
+          <select
+            onChange={handleRecurringChange}
+            className="h-10 px-3 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All Types</option>
+            <option value="true">Recurring</option>
+            <option value="false">One-time</option>
+          </select>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded border border-white">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-neutral-900">
-              <TableHead className="text-white">Name</TableHead>
-              <TableHead className="text-white">Amount</TableHead>
-              <TableHead className="text-white">Date</TableHead>
-              <TableHead className="text-white">Category</TableHead>
-              <TableHead className="text-white">Recurring</TableHead>
-              <TableHead className="text-white">Actions</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-semibold">Name</TableHead>
+              <TableHead className="font-semibold">Amount</TableHead>
+              <TableHead className="font-semibold">Date</TableHead>
+              <TableHead className="font-semibold">Category</TableHead>
+              <TableHead className="font-semibold">Type</TableHead>
+              <TableHead className="font-semibold text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-6">
-                  Loading...
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 bg-primary rounded-full animate-pulse"></div>
+                    <span className="text-muted-foreground">Loading expenses...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : data?.data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="text-muted-foreground">
+                    <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No expenses found</p>
+                    <p className="text-sm">Try adjusting your filters</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               data?.data.map((expense) => (
-                <TableRow key={expense._id} className="hover:bg-neutral-800">
-                  <TableCell>{expense.name}</TableCell>
-                  <TableCell>${expense.amount.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {new Date(expense.date).toLocaleDateString()}
+                <TableRow key={expense._id} className="hover:bg-muted/30 transition-colors">
+                  <TableCell className="font-medium">{expense.name}</TableCell>
+                  <TableCell className="font-mono">
+                    <span className="text-primary font-semibold">
+                      ${expense.amount.toFixed(2)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(expense.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
                   </TableCell>
                   <TableCell>
-                    {" "}
-                    {expense.categoryId
-                      ? categoryMap[expense.categoryId]
-                      : "Uncategorized"}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                      {expense.categoryId
+                        ? categoryMap[expense.categoryId]
+                        : "Uncategorized"}
+                    </span>
                   </TableCell>
-                  <TableCell>{expense.isRecurring ? "Yes" : "No"}</TableCell>
-                  <TableCell className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {setEditing(expense)}}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setConfirmId(expense._id);
-                        setConfirmOpen(true);
-                      }}
-                    >
-                      Delete
-                    </Button>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      expense.isRecurring 
+                        ? 'bg-primary/10 text-primary' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {expense.isRecurring ? "Recurring" : "One-time"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditing(expense)}
+                        className="h-8 px-3"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setConfirmId(expense._id);
+                          setConfirmOpen(true);
+                        }}
+                        className="h-8 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -447,13 +487,19 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
           </TableBody>
         </Table>
       </div>
-      
-      {data && (
-        <div className="flex items-center justify-between pt-4">
+
+      {/* Pagination */}
+      {data && data.meta.totalPages > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+          <div className="flex items-center text-sm text-muted-foreground">
+            Showing {((params.page ?? 1) - 1) * currentLimit + 1} to{' '}
+            {Math.min((params.page ?? 1) * currentLimit, data.meta.total)} of{' '}
+            {data.meta.total} results
+          </div>
+
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
-              className="text-white border-white"
               size="sm"
               onClick={() =>
                 setParams((prev) => ({
@@ -462,27 +508,30 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
                 }))
               }
               disabled={params.page === 1}
+              className="h-8 w-8 p-0"
             >
-              ← Prev
+              <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            {Array.from({ length: data.meta.totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                size="sm"
-                variant={params.page === page ? 'default' : 'outline'}
-                className={`${
-                  params.page === page ? 'bg-white text-black' : 'text-white border-white'
-                } px-3`}
-                onClick={() => setParams((prev) => ({ ...prev, page }))}
-              >
-                {page}
-              </Button>
-            )).slice(0, 5)}
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, data.meta.totalPages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <Button
+                    key={page}
+                    size="sm"
+                    variant={params.page === page ? 'default' : 'ghost'}
+                    onClick={() => setParams((prev) => ({ ...prev, page }))}
+                    className="h-8 w-8 p-0"
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+            </div>
 
             <Button
               variant="outline"
-              className="text-white border-white"
               size="sm"
               onClick={() =>
                 setParams((prev) => ({
@@ -491,66 +540,69 @@ const [confirmId, setConfirmId] = useState<string | null>(null);
                 }))
               }
               disabled={params.page === data.meta.totalPages}
+              className="h-8 w-8 p-0"
             >
-              Next →
+              <ChevronRight className="h-4 w-4" />
             </Button>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-white">Rows per page:</span>
-            <select
-              value={params.limit}
-              onChange={(e) =>
-                setParams((prev) => ({
-                  ...prev,
-                  limit: Number(e.target.value),
-                  page: 1,
-                }))
-              }
-              className="bg-black text-white border border-white rounded px-2 py-1"
-            >
-              {[10, 25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2 ml-4">
+              <span className="text-sm text-muted-foreground">Rows:</span>
+              <select
+                value={currentLimit}
+                onChange={(e) =>
+                  setParams((prev) => ({
+                    ...prev,
+                    limit: Number(e.target.value),
+                    page: 1,
+                  }))
+                }
+                className="h-8 px-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       )}
-      {editing && (
-  <EditExpenseModal
-    open={!!editing}
-    onClose={() => setEditing(null)}
-    initial={{
-      name: editing.name,
-      amount: editing.amount,
-      date: editing.date.split('T')[0],
-      categoryId: editing.categoryId,
-    }}
-    categories={categories}
-    onSave={async (updated) => {
-      await updateExpense(editing._id, updated);
-      setEditing(null);
-      refetch();
-    }}
-  />
-)}
-{confirmId && (
-  <ConfirmDialog
-    open={confirmOpen}
-    onClose={() => setConfirmOpen(false)}
-    title="Delete Expense?"
-    description="This action cannot be undone."
-    onConfirm={async () => {
-      await deleteExpense(confirmId); // your API call
-      setConfirmOpen(false);
-      setConfirmId(null);
-      refetch(); // refresh list
-    }}
-  />
-)}
 
+      {/* Modals */}
+      {editing && (
+        <EditExpenseModal
+          open={!!editing}
+          onClose={() => setEditing(null)}
+          initial={{
+            name: editing.name,
+            amount: editing.amount,
+            date: editing.date.split('T')[0],
+            categoryId: editing.categoryId,
+          }}
+          categories={categories}
+          onSave={async (updated) => {
+            await updateExpense(editing._id, updated);
+            setEditing(null);
+            refetch();
+          }}
+        />
+      )}
+
+      {confirmId && (
+        <ConfirmDialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          title="Delete Expense?"
+          description="This action cannot be undone."
+          onConfirm={async () => {
+            await deleteExpense(confirmId);
+            setConfirmOpen(false);
+            setConfirmId(null);
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 };

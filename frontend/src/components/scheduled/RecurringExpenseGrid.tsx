@@ -3,23 +3,30 @@ import {
   getScheduledExpenses,
   updateScheduledExpense,
   deleteScheduledExpense,
+  toggleScheduledExpense,
+  getUserTimezone,
+  getDateStringForInput,
   ScheduledExpense,
 } from "@/api/scheduledExpense";
+
 import RecurringExpenseCard from "./RecurringExpenseCard";
 import EditScheduledExpenseModal from "./EditScheduledExpenseModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
-import { toggleScheduledExpense } from "@/api/scheduledExpense"; 
+
 export default function RecurringExpenseGrid() {
   const [expenses, setExpenses] = useState<ScheduledExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<null | ScheduledExpense>(null);
   const [toDelete, setToDelete] = useState<null | ScheduledExpense>(null);
+  
+  const userTimezone = getUserTimezone(); // Get user's timezone
 
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        const res = await getScheduledExpenses("active");
+        const res = await getScheduledExpenses(userTimezone, "active");
+        console.log("Fetched scheduled expenses:", res.data);
         setExpenses(res.data);
       } catch (err) {
         console.error("Failed to load scheduled expenses:", err);
@@ -29,7 +36,7 @@ export default function RecurringExpenseGrid() {
     };
 
     fetchExpenses();
-  }, []);
+  }, [userTimezone]);
 
   const handleSave = async (updated: {
     name: string;
@@ -40,13 +47,14 @@ export default function RecurringExpenseGrid() {
     if (!editing) return;
 
     try {
-      const res = await updateScheduledExpense(editing._id, updated);
+      const res = await updateScheduledExpense(userTimezone, editing._id, updated);
       setExpenses((prev) =>
         prev.map((e) => (e._id === editing._id ? res.data : e))
       );
       setEditing(null);
     } catch (err) {
       console.error("Failed to update scheduled expense", err);
+      toast.error("Failed to update scheduled expense");
     }
   };
 
@@ -62,6 +70,7 @@ export default function RecurringExpenseGrid() {
       toast.error("Failed to delete scheduled expense");
     }
   };
+
   const handleToggle = async (id: string) => {
     try {
       const res = await toggleScheduledExpense(id);
@@ -78,11 +87,19 @@ export default function RecurringExpenseGrid() {
   };
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading scheduled expenses...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        Loading scheduled expenses...
+      </p>
+    );
   }
 
   if (!expenses.length) {
-    return <p className="text-sm text-muted-foreground">No active scheduled expenses found.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        No active scheduled expenses found.
+      </p>
+    );
   }
 
   return (
@@ -106,7 +123,7 @@ export default function RecurringExpenseGrid() {
           initial={{
             name: editing.name,
             amount: editing.amount,
-            endDate: editing.endDate || null,
+            endDate: editing.endDate ? getDateStringForInput(editing.endDate) : null,
             isActive: editing.isActive,
           }}
           onSave={handleSave}

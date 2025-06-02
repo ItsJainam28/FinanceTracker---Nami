@@ -42,15 +42,15 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       >
         {/* Avatar */}
         <div
-          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-neutral-800 text-white ${
+          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-muted text-foreground ${
             isUser ? "ml-2" : "mr-2"
           }`}
         >
           {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
         </div>
 
-        {/* Shared Message Bubble */}
-        <div className="group relative rounded-xl px-4 py-3 text-sm bg-neutral-900 text-neutral-100 border border-neutral-700">
+        {/* Message Bubble */}
+        <div className="group relative rounded-xl px-4 py-3 text-sm bg-muted text-foreground border border-border">
           <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
             {isUser ? (
               <p>{message.content}</p>
@@ -59,20 +59,20 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             )}
           </div>
 
-          {/* Timestamp and optional copy button */}
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-700 text-xs text-neutral-400">
+          {/* Footer: Timestamp & Copy */}
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-border text-xs text-muted-foreground">
             <p>{formatTime(message.createdAt)}</p>
 
             {!isUser && (
               <button
                 onClick={copyToClipboard}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-700 rounded transition-all duration-200 ml-2"
+                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded transition-all duration-200 ml-2"
                 title="Copy message"
               >
                 {copied ? (
-                  <Check className="w-3 h-3 text-green-400" />
+                  <Check className="w-3 h-3 text-primary" />
                 ) : (
-                  <Copy className="w-3 h-3 text-neutral-400" />
+                  <Copy className="w-3 h-3 text-muted-foreground" />
                 )}
               </button>
             )}

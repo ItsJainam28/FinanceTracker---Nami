@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -35,47 +37,47 @@ export function ChatInput({
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(
         textareaRef.current.scrollHeight,
-        120
+        160
       )}px`;
     }
   }, [message]);
 
   return (
-    <div className="border-t border-neutral-800 bg-black px-4 py-3 scrollbar">
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex gap-3 items-end ">
-        {/* Textarea */}
-        <div className="flex-1 relative ">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={placeholder}
-            disabled={disabled}
-            rows={1}
-            className="w-full px-4 py-3 bg-neutral-900 text-white border border-neutral-700 rounded-lg resize-none max-h-[120px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder-neutral-500 disabled:opacity-50 scrollbar-hide"
-          />
-        </div>
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto w-full max-w-4xl px-4 py-4"
+    >
+      <div className="relative">
+        <Textarea
+          ref={textareaRef}
+          rows={1}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyPress}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="pr-14 text-sm resize-none max-h-[160px] overflow-y-auto"
+        />
 
-        {/* Send button */}
-        <button
+        {/* Button inside the textarea wrapper */}
+        <Button
           type="submit"
+          size="icon"
           disabled={!message.trim() || disabled}
-          className="flex-shrink-0 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[40px] h-[40px] flex items-center justify-center"
-          title="Send message"
+          className="absolute bottom-2.5 right-2.5 h-8 w-8 p-2 rounded-full shadow bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          title="Send"
         >
           {disabled ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           )}
-        </button>
-      </form>
-
-      {/* Optional hint */}
-      <div className="mt-2 text-xs text-neutral-500 text-center">
-        Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line
+        </Button>
       </div>
-    </div>
+
+      <p className="text-center text-xs text-muted-foreground mt-3">
+        Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for newline
+      </p>
+    </form>
   );
 }

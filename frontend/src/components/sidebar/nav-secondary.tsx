@@ -24,10 +24,10 @@ export function NavSecondary({
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild size="sm">
-                <a href={item.url}>
-                  <item.icon />
+            <SidebarMenuItem key={item.title} className="hover:bg-muted rounded-md transition-colors">
+              <SidebarMenuButton asChild size="sm" className="text-muted-foreground">
+                <a href={item.url} className="flex items-center gap-2 w-full">
+                  <item.icon className="w-4 h-4" />
                   <span>{item.title}</span>
                 </a>
               </SidebarMenuButton>

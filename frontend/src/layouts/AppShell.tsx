@@ -7,11 +7,11 @@ export default function AppShell() {
   return (
     <SidebarProvider>
         {/* Take up the entire screen */}
-      <div className="flex h-screen w-screen overflow ">
+      <div className="flex h-screen w-screen overflow  bg-background text-foreground">
         {/* <AppSidebar /> */}
         <AppSidebar/>
         {/* Give content room when the sidebar is visible on ≥md */}
-        <main className="flex-1">
+        <main className="flex-1 bg-background">
           <Outlet />
         </main>
       </div>

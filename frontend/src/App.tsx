@@ -19,9 +19,11 @@ import { AddExpensePage } from "./pages/Expenses/AddExpensePage";
 import { Toaster } from "sonner";
 import AddScheduledExpensePage from "@/pages/ScheduledExpenses/AddScheduleExpensePage";
 import { ChatPage } from "./pages/Chat/ChatPage";
+import { ThemeProvider } from "./components/theme-provider";
 const queryClient = new QueryClient();
 export default function App() {
   return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <QueryClientProvider client={queryClient}>
     <Router>
       <Routes>
@@ -55,6 +57,7 @@ export default function App() {
     </Router>
     <Toaster position="top-right" richColors />
     </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

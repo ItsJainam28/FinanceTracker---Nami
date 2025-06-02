@@ -1,16 +1,14 @@
-import * as React from "react"
+import * as React from "react";
 import { useEffect, useState } from "react";
-import api from "@/api/axiosInstance"; // your existing Axios instance
+import api from "@/api/axiosInstance";
 
 import {
-  Bot,
   Command,
-  LucideIcon,
   MessageSquare,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/sidebar/nav-main"
-import { NavUser } from "@/components/sidebar/nav-user"
+import { NavMain } from "@/components/sidebar/nav-main";
+import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -19,9 +17,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { navItems } from "@/components/sidebar/nav-items"
-import { createChatSession, getChatSessions, ChatSession } from "@/api/assistant";
+} from "@/components/ui/sidebar";
+import { navItems } from "@/components/sidebar/nav-items";
+import { createChatSession, getChatSessions, deleteSession, updateSessionTitle, ChatSession } from "@/api/assistant";
 import { useNavigate } from "react-router-dom";
 import { NavProjects } from "./nav-projects";
 
@@ -32,85 +30,117 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     avatar: "/avatars/user.jpg",
   });
 
-  const navigate = useNavigate();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadSessions = async () => {
       try {
         const response = await getChatSessions();
-        console.log('Fetched sessions:', response.data.data);
         setSessions(response.data.data);
       } catch (error) {
-        console.error('Failed to load sessions:', error);
-        setSessions([]); // Fallback to empty array
+        console.error("Failed to load sessions:", error);
+        setSessions([]);
       }
     };
-    
+
     loadSessions();
   }, []);
-
-  const handleNewChat = async () => {
-    try {
-      const { data } = await createChatSession();
-      console.log("New chat session created:", data.data._id);
-      navigate(`/chat/${data.data._id}`);
-    } catch (err) {
-      console.error("Failed to start new chat:", err);
-    }
-  };
-
-  const projectsData = sessions.map(session => ({
-    name: session.title,
-    url: `/chat/${session._id}`, 
-    icon: MessageSquare 
-  }));
-  
 
   useEffect(() => {
     (async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-  
         const { data } = await api.get("/auth/me");
         setUser({
           name: data.firstname ?? "User",
           email: data.email ?? "user@example.com",
-          avatar: "/avatars/user.jpg", // replace with dynamic avatar if you have one
+          avatar: "/avatars/user.jpg",
         });
       } catch (err) {
         console.error("Failed to fetch user:", err);
       }
     })();
   }, []);
-  
+
+  const handleNewChat = async () => {
+    try {
+      const { data } = await createChatSession();
+      navigate(`/chat/${data.data._id}`);
+    } catch (err) {
+      console.error("Failed to start new chat:", err);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      await deleteSession(sessionId);
+      setSessions(prev => prev.filter(session => session._id !== sessionId));
+    } catch (err) {
+      console.error("Failed to delete session:", err);
+    }
+  };
+
+  const handleUpdateSessionTitle = async (sessionId: string, newTitle: string) => {
+    try {
+      await updateSessionTitle(sessionId, newTitle);
+      setSessions(prev =>
+        prev.map(session =>
+          session._id === sessionId ? { ...session, title: newTitle } : session
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update session title:", err);
+    }
+  };
+
+  const projectsData = sessions.map(session => ({
+    _id: session._id,
+    name: session.title,
+    url: `/chat/${session._id}`,
+    icon: MessageSquare,
+  }));
+
   return (
-    <Sidebar variant="inset"     className="bg-zinc-900 text-white border-r border-zinc-800 shadow-md"{...props}>
+    <Sidebar
+      variant="inset"
+      className="bg-background text-foreground border-r border-border shadow-sm"
+      {...props}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg cursor-pointer">
+                <div className="bg-muted text-muted-foreground flex aspect-square size-8 items-center justify-center rounded-lg cursor-pointer">
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Fincance Tracker</span>
-                  <span className="truncate text-xs">Track that Money!</span>
+                  <span className="truncate font-medium">Finance Tracker</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Track that Money!
+                  </span>
                 </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
         <NavMain items={navItems} />
-        <NavProjects projects={projectsData} onNewChat={handleNewChat} />
+        <NavProjects
+          projects={projectsData}
+          onNewChat={handleNewChat}
+          updateSessionTitle={handleUpdateSessionTitle}
+          deleteSession={handleDeleteSession}
+        />
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

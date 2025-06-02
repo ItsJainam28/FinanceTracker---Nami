@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import BudgetStatsModal from "@/components/budget/BudgetStatsModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import EditRecurringBudgetModal from "@/components/budget/EditRecurringBudgetModal";
+
 interface RecurringBudget {
   _id: string;
   name: string;
@@ -40,10 +41,7 @@ export default function BudgetPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState<RecurringBudget | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingDeactivateId, setPendingDeactivateId] = useState<string | null>(
-    null
-  );
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDeactivateId, setPendingDeactivateId] = useState<string | null>(null);
   const [editingBudget, setEditingBudget] = useState<RecurringBudget | null>(null);
 
   const [form, setForm] = useState({
@@ -120,7 +118,7 @@ export default function BudgetPage() {
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-black text-white px-6 py-10">
+    <div className="flex-1 min-h-screen bg-background text-foreground px-6 py-10">
       <div className="max-w-7xl mx-auto space-y-8">
         <h1 className="text-3xl font-extrabold">Budgets</h1>
 
@@ -128,28 +126,22 @@ export default function BudgetPage() {
           {budgets.map((b) => (
             <div
               key={b._id}
-              className="border border-white/20 rounded-lg p-5 bg-black hover:shadow-xl transition cursor-pointer"
+              className="border border-border rounded-xl p-5 bg-card hover:shadow-xl transition cursor-pointer"
               onClick={(e) => {
                 if ((e.target as HTMLElement).tagName === "BUTTON") return;
                 setSelected(b);
               }}
             >
-              {/* h2 and p shoudl be vertically */}
-              <div className="flex justify-between ">
-                <div className="flex-y justify-between items-center ">
-                  <h2 className="text-lg font-bold">{b.name}</h2>
-                  <p className="text-sm text-gray-400">
+              <div className="flex justify-between">
+                <div className="flex flex-col justify-between">
+                  <h2 className="text-lg font-bold text-card-foreground">{b.name}</h2>
+                  <p className="text-sm text-muted-foreground">
                     {b.categories
-                      .map(
-                        (id) =>
-                          categories.find((c) => c._id === id)?.name ??
-                          "Unknown"
-                      )
+                      .map((id) => categories.find((c) => c._id === id)?.name ?? "Unknown")
                       .join(" | ")}
                   </p>
                 </div>
-                <div className="text-sm text-gray-400">
-                  {/* Show the current Month and Year */}
+                <div className="text-sm text-muted-foreground">
                   {new Date().toLocaleString("default", {
                     month: "long",
                     year: "numeric",
@@ -160,7 +152,7 @@ export default function BudgetPage() {
               <div className="mt-4">
                 <Progress
                   value={b.currentMonth?.percent || 0}
-                  className="h-3 bg-white/10"
+                  className="h-3 bg-muted"
                   indicatorClassName={
                     (b.currentMonth?.percent || 0) > 100
                       ? "bg-red-500"
@@ -169,24 +161,24 @@ export default function BudgetPage() {
                       : "bg-green-500"
                   }
                 />
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-muted-foreground mt-1">
                   {b.currentMonth?.percent?.toFixed(1) || 0}% used — $
                   {b.currentMonth?.spent?.toFixed(2) || 0} spent
                 </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-4">
-              <Button
-                size="sm"
-                onClick={() => setEditingBudget(b)}
-                className="z-10 bg-white text-black rounded-md hover:bg-gray-200"
-              >
-                Edit
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setEditingBudget(b)}
+                  className="z-10 bg-primary text-primary-foreground hover:bg-primary/80"
+                >
+                  Edit
+                </Button>
                 <Button
                   size="sm"
                   onClick={() => confirmDeactivate(b._id)}
-                  className="z-10 bg-white text-black rounded-md hover:bg-gray-200"
+                  className="z-10 bg-muted text-foreground hover:bg-muted/80"
                 >
                   Deactivate
                 </Button>
@@ -197,7 +189,7 @@ export default function BudgetPage() {
 
         <div className="flex justify-center">
           <Button
-            className="bg-white text-black hover:bg-gray-200"
+            className="bg-primary text-primary-foreground hover:bg-primary/80"
             onClick={() => setFormOpen(true)}
           >
             Add Budget
@@ -206,12 +198,11 @@ export default function BudgetPage() {
       </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="bg-black text-white border border-white/20">
+        <DialogContent className="bg-card text-card-foreground border border-border">
           <DialogHeader>
             <DialogTitle>Add Budget</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            {/* Start Month Display */}
             <div>
               <label className="text-sm mb-1 block">Name</label>
               <Input
@@ -219,43 +210,37 @@ export default function BudgetPage() {
                 name="name"
                 placeholder="Budget Name"
                 value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                className="bg-black border border-white/20 text-white"
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                className="bg-card border border-border text-foreground"
                 required
               />
 
-              <label className="text-sm mb-1 block">Start Date</label>
+              <label className="text-sm mb-1 block mt-3">Start Date</label>
               <Input
                 type="text"
                 value={`${new Date().toDateString()}`}
                 disabled
-                className="bg-black border border-white/20 text-white opacity-70 cursor-not-allowed"
+                className="bg-card border border-border text-muted-foreground opacity-70 cursor-not-allowed"
               />
             </div>
 
-            {/* Budget Amount */}
             <Input
               type="number"
               name="amount"
               placeholder="Budget Amount"
               value={form.amount}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, amount: e.target.value }))
-              }
-              className="bg-black border border-white/20 text-white"
+              onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+              className="bg-card border border-border text-foreground"
               required
             />
 
-            {/* Category Selection */}
             <div>
               <label className="text-sm mb-1 block">Categories</label>
               <div className="grid grid-cols-2 gap-2">
                 {categories.map((cat) => (
                   <label
                     key={cat._id}
-                    className="flex items-center gap-2 text-sm"
+                    className="flex items-center gap-2 text-sm text-foreground"
                   >
                     <Checkbox
                       checked={form.categories.includes(cat._id)}
@@ -278,7 +263,7 @@ export default function BudgetPage() {
                       endMonth: Number(e.target.value) || null,
                     }))
                   }
-                  className="bg-black border border-white/20 p-2 rounded text-white"
+                  className="bg-card border border-border p-2 rounded text-foreground"
                 >
                   <option value="">Month</option>
                   {Array.from({ length: 12 }).map((_, i) => (
@@ -297,7 +282,7 @@ export default function BudgetPage() {
                       endYear: Number(e.target.value) || null,
                     }))
                   }
-                  className="bg-black border border-white/20 p-2 rounded text-white"
+                  className="bg-card border border-border p-2 rounded text-foreground"
                 >
                   <option value="">Year</option>
                   {Array.from({ length: 5 }).map((_, i) => {
@@ -312,10 +297,9 @@ export default function BudgetPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <Button
               type="submit"
-              className="mt-2 bg-white text-black w-full hover:bg-gray-100"
+              className="mt-2 bg-primary text-primary-foreground w-full hover:bg-primary/80"
             >
               Save Budget
             </Button>
@@ -338,17 +322,16 @@ export default function BudgetPage() {
         description="This will stop future budgets and archive upcoming ones."
         onConfirm={doDeactivate}
       />
-      {editingBudget && (
-  <EditRecurringBudgetModal
-    open={!!editingBudget}
-    onClose={() => setEditingBudget(null)}
-    budget={editingBudget}
-    categories={categories}
-    onUpdated={fetchData}
-/>
-)}
 
+      {editingBudget && (
+        <EditRecurringBudgetModal
+          open={!!editingBudget}
+          onClose={() => setEditingBudget(null)}
+          budget={editingBudget}
+          categories={categories}
+          onUpdated={fetchData}
+        />
+      )}
     </div>
-    
   );
 }

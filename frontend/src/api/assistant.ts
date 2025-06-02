@@ -1,8 +1,3 @@
-
-
-
-
-
 import api from "./axiosInstance";
 
 // Updated interfaces to match your backend response
@@ -98,8 +93,9 @@ export const streamAssistantReply = async (sessionId: string, message: string) =
 
 // Helper function to update session title
 export const updateSessionTitle = (sessionId: string, title: string): Promise<{ data: ApiResponse<ChatSession> }> =>
-  api.patch(`/ai/sessions/${sessionId}`, { title });
+  api.put(`/ai/sessions/${sessionId}/title`, { title });
 
 // Helper function to delete a session
-export const deleteSession = (sessionId: string): Promise<{ data: ApiResponse<void> }> =>
+export  const deleteSession = (sessionId: string): Promise<{ data: ApiResponse<void> }> =>
   api.delete(`/ai/sessions/${sessionId}`);
+

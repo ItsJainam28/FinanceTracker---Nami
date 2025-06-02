@@ -1,6 +1,6 @@
 import { AnalyticsSummary } from "@/types/analytics";
 import { ArrowDown, ArrowUp, CalendarIcon } from "lucide-react";
-import { format, isToday, parseISO } from "date-fns";
+import { format } from "date-fns";
 
 interface Props {
   data: AnalyticsSummary;
@@ -25,17 +25,19 @@ export default function SummaryCards({ data }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
       {/* Total Spent */}
-      <div className="bg-black border border-white/20 rounded-lg p-4">
-        <p className="text-sm text-gray-400">Total Spent This Month</p>
-        <p className="text-2xl font-bold text-white">${data.totalSpending.toFixed(2)}</p>
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+        <p className="text-sm text-muted-foreground">Total Spent This Month</p>
+        <p className="text-2xl font-bold text-card-foreground">
+          ${data.totalSpending.toFixed(2)}
+        </p>
       </div>
 
       {/* Month-over-Month Change */}
-      <div className="bg-black border border-white/20 rounded-lg p-4">
-        <p className="text-sm text-gray-400">Change from Last Month</p>
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+        <p className="text-sm text-muted-foreground">Change from Last Month</p>
         <p
           className={`flex items-center text-xl font-semibold ${
-            changeDirection === "down" ? "text-green-400" : "text-red-400"
+            changeDirection === "down" ? "text-green-500" : "text-red-500"
           }`}
         >
           {changeDirection === "down" ? <ArrowDown size={20} /> : <ArrowUp size={20} />}
@@ -44,12 +46,14 @@ export default function SummaryCards({ data }: Props) {
       </div>
 
       {/* Today's Spending */}
-      <div className="bg-black border border-white/20 rounded-lg p-4">
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-400">Today's Spending</p>
-          <CalendarIcon size={18} className="text-white" />
+          <p className="text-sm text-muted-foreground">Today's Spending</p>
+          <CalendarIcon size={18} className="text-card-foreground" />
         </div>
-        <p className="text-2xl font-bold text-white mt-1">${todaySpent.toFixed(2)}</p>
+        <p className="text-2xl font-bold text-card-foreground mt-1">
+          ${todaySpent.toFixed(2)}
+        </p>
       </div>
     </div>
   );

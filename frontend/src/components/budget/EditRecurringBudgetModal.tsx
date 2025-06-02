@@ -64,14 +64,13 @@ export default function EditRecurringBudgetModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res =await api.patch(`/recurring-budgets/${budget._id}`, {
+      await api.patch(`/recurring-budgets/${budget._id}`, {
         name: form.name,
         amount: Number(form.amount),
         categories: form.categories,
         endMonth: form.endMonth,
         endYear: form.endYear,
       });
-      console.log("RES:", res);
       onClose();
       onUpdated(); // trigger refetch in parent
     } catch (err: any) {
@@ -81,7 +80,7 @@ export default function EditRecurringBudgetModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-black text-white border border-white/20">
+      <DialogContent className="bg-background text-foreground border border-border">
         <DialogHeader>
           <DialogTitle>Edit Budget</DialogTitle>
         </DialogHeader>
@@ -92,7 +91,7 @@ export default function EditRecurringBudgetModal({
             placeholder="Budget Name"
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="bg-black border border-white/20 text-white"
+            className="bg-muted border border-border text-foreground"
             required
           />
 
@@ -101,12 +100,12 @@ export default function EditRecurringBudgetModal({
             placeholder="Budget Amount"
             value={form.amount}
             onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-            className="bg-black border border-white/20 text-white"
+            className="bg-muted border border-border text-foreground"
             required
           />
 
           <div>
-            <label className="text-sm mb-1 block">Categories</label>
+            <label className="text-sm text-muted-foreground mb-1 block">Categories</label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => (
                 <label
@@ -124,7 +123,7 @@ export default function EditRecurringBudgetModal({
           </div>
 
           <div>
-            <label className="text-sm mb-1 block">End Month (optional)</label>
+            <label className="text-sm text-muted-foreground mb-1 block">End Month (optional)</label>
             <div className="flex gap-2">
               <select
                 value={form.endMonth || ""}
@@ -134,7 +133,7 @@ export default function EditRecurringBudgetModal({
                     endMonth: Number(e.target.value) || null,
                   }))
                 }
-                className="bg-black border border-white/20 p-2 rounded text-white"
+                className="bg-muted border border-border p-2 rounded text-foreground"
               >
                 <option value="">Month</option>
                 {Array.from({ length: 12 }).map((_, i) => (
@@ -154,7 +153,7 @@ export default function EditRecurringBudgetModal({
                     endYear: Number(e.target.value) || null,
                   }))
                 }
-                className="bg-black border border-white/20 p-2 rounded text-white"
+                className="bg-muted border border-border p-2 rounded text-foreground"
               >
                 <option value="">Year</option>
                 {Array.from({ length: 5 }).map((_, i) => {
@@ -169,10 +168,7 @@ export default function EditRecurringBudgetModal({
             </div>
           </div>
 
-          <Button
-            type="submit"
-            className="mt-2 bg-white text-black w-full hover:bg-gray-100"
-          >
+          <Button type="submit" className="w-full mt-2">
             Update Budget
           </Button>
         </form>

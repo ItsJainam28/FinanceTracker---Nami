@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { createScheduledExpense } from "@/api/scheduledExpense";
+import { createScheduledExpense, getUserTimezone } from "@/api/scheduledExpense";
 import { listCategories, Category } from "@/api/category";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -12,6 +12,7 @@ import { format } from "date-fns";
 export default function AddScheduledExpensePage() {
   const navigate = useNavigate();
   const todayStr = format(new Date(), "yyyy-MM-dd");
+  const userTimezone = getUserTimezone(); // Get user's timezone
 
   const [form, setForm] = useState({
     name: "",
@@ -48,7 +49,7 @@ export default function AddScheduledExpensePage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await createScheduledExpense({
+      await createScheduledExpense(userTimezone, {
         name: form.name,
         amount: Number(form.amount),
         startDate: form.startDate,
@@ -69,7 +70,7 @@ export default function AddScheduledExpensePage() {
   };
 
   return (
-    <div className="min-h-screen px-8 py-14 bg-black text-white">
+    <div className="min-h-screen px-8 py-14 bg-background text-foreground">
       <div className="max-w-4xl mx-auto space-y-10">
         <div className="space-y-2">
           <h1 className="text-4xl font-extrabold tracking-tight">
@@ -79,20 +80,19 @@ export default function AddScheduledExpensePage() {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-8 bg-zinc-900 p-10 rounded-xl border border-zinc-800 shadow-2xl"
+          className="space-y-8 bg-card p-10 rounded-xl border border-border shadow-2xl"
         >
           {/* Name */}
           <div>
             <Label className="text-sm">Expense Name</Label>
             <p className="text-xs text-muted-foreground mb-1">
-              What is this recurring payment for? E.g. “Spotify”, “Gym”, or
-              “Rent”.
+              What is this recurring payment for? E.g. "Spotify", "Gym", or
+              "Rent".
             </p>
             <Input
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="bg-zinc-800 border-zinc-700 text-white"
               required
             />
           </div>
@@ -108,7 +108,6 @@ export default function AddScheduledExpensePage() {
               name="amount"
               value={form.amount}
               onChange={handleChange}
-              className="bg-zinc-800 border-zinc-700 text-white"
               required
             />
           </div>
@@ -124,7 +123,6 @@ export default function AddScheduledExpensePage() {
               name="startDate"
               value={form.startDate}
               onChange={handleChange}
-              className="bg-zinc-800 border-zinc-700 text-white"
               required
             />
           </div>
@@ -140,7 +138,6 @@ export default function AddScheduledExpensePage() {
               name="endDate"
               value={form.endDate}
               onChange={handleChange}
-              className="bg-zinc-800 border-zinc-700 text-white"
             />
           </div>
 
@@ -155,7 +152,7 @@ export default function AddScheduledExpensePage() {
               value={form.categoryId}
               onChange={handleChange}
               required
-              className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white px-3 py-2"
+              className="w-full rounded-md bg-background border border-border text-foreground px-3 py-2"
             >
               <option value="" disabled>
                 Select category
@@ -190,11 +187,10 @@ export default function AddScheduledExpensePage() {
               <div>
                 <Label className="text-sm">Log for this month</Label>
                 <p className="text-xs text-muted-foreground">
-                  Should we include this in the current month’s records?
+                  Should we include this in the current month's records?
                 </p>
               </div>
               <Switch
-            
                 checked={form.logIfPast}
                 onCheckedChange={(val) =>
                   setForm((p) => ({ ...p, logIfPast: val }))
@@ -205,11 +201,7 @@ export default function AddScheduledExpensePage() {
 
           {/* Submit */}
           <div className="pt-6">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-black text-base font-medium py-2.5 hover:bg-gray-200 transition"
-            >
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Saving..." : "Add Scheduled Expense"}
             </Button>
           </div>

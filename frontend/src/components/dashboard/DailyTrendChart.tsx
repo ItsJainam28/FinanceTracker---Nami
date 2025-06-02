@@ -8,21 +8,27 @@ import {
   Tooltip,
 } from "chart.js";
 import { format, parseISO } from "date-fns";
+import { useEffect, useState } from "react";
 import { DailyTrendEntry } from "@/types/analytics";
 
-ChartJS.register(
-  LineElement,
-  PointElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip
-);
+ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Tooltip);
 
 interface Props {
   data: DailyTrendEntry[];
 }
 
 export default function DailyTrendChart({ data }: Props) {
+  const [themeColor, setThemeColor] = useState("#ffffff");
+  const [fillColor, setFillColor] = useState("rgba(255, 255, 255, 0.1)");
+
+  useEffect(() => {
+    const root = getComputedStyle(document.documentElement);
+    const primary = root.getPropertyValue("--color-primary").trim();
+    const foreground = root.getPropertyValue("--color-foreground").trim();
+    setThemeColor(primary);
+    setFillColor(primary.replace(")", " / 0.15)").replace("oklch", "oklch")); // fade fill
+  }, []);
+
   const labels = data.map((d) => format(parseISO(d._id), "MMM d"));
   const values = data.map((d) => d.total);
 
@@ -32,8 +38,8 @@ export default function DailyTrendChart({ data }: Props) {
       {
         label: "Daily Spending",
         data: values,
-        borderColor: "#60A5FA", // blue-400
-        backgroundColor: "rgba(96, 165, 250, 0.2)",
+        borderColor: themeColor,
+        backgroundColor: fillColor,
         tension: 0.3,
         fill: true,
       },
@@ -41,7 +47,7 @@ export default function DailyTrendChart({ data }: Props) {
   };
 
   return (
-    <div className="w-full h-full bg-black border border-white/20 rounded-lg p-4 flex items-center justify-center">
+    <div className="w-full h-full bg-card border border-border rounded-xl p-4 flex items-center justify-center shadow-md">
       <div className="w-full h-[300px]">
         <Line
           data={chartData}
@@ -50,22 +56,30 @@ export default function DailyTrendChart({ data }: Props) {
             maintainAspectRatio: false,
             scales: {
               x: {
-                ticks: { color: "white" },
-                grid: { color: "#1f2937" },
+                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--color-foreground").trim() },
+                grid: { color: "oklch(1 0 0 / 0.08)" },
               },
               y: {
-                ticks: { color: "white" },
-                grid: { color: "#1f2937" },
+                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--color-foreground").trim() },
+                grid: { color: "oklch(1 0 0 / 0.08)" },
                 beginAtZero: true,
               },
             },
             plugins: {
-              legend: { labels: { color: "white" } },
+              legend: {
+                labels: {
+                  color: getComputedStyle(document.documentElement).getPropertyValue("--color-foreground").trim(),
+                },
+              },
+              tooltip: {
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--color-card").trim(),
+                titleColor: getComputedStyle(document.documentElement).getPropertyValue("--color-foreground").trim(),
+                bodyColor: getComputedStyle(document.documentElement).getPropertyValue("--color-foreground").trim(),
+              },
             },
           }}
         />
       </div>
     </div>
   );
-  
 }

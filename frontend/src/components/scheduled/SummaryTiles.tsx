@@ -1,24 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getScheduledSummary, ScheduledSummary } from "@/api/scheduledExpense";
+import { 
+  getScheduledSummary, 
+  ScheduledSummary, 
+  getUserTimezone,
+  formatScheduledExpenseDate 
+} from "@/api/scheduledExpense";
 
 const dotColors = [
-  "bg-green-500",
-  "bg-blue-500",
-  "bg-yellow-500",
-  "bg-purple-500",
-  "bg-pink-500",
-  "bg-red-500",
+  "bg-emerald-400",
+  "bg-blue-400",
+  "bg-yellow-400",
+  "bg-purple-400",
+  "bg-pink-400",
+  "bg-red-400",
 ];
 
 export default function SummaryTiles() {
   const [summary, setSummary] = useState<ScheduledSummary | null>(null);
+  const userTimezone = getUserTimezone();
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await getScheduledSummary();
+        const res = await getScheduledSummary(userTimezone);
         setSummary(res.data);
       } catch (err) {
         console.error("Failed to load scheduled summary:", err);
@@ -26,37 +32,62 @@ export default function SummaryTiles() {
     };
 
     fetchSummary();
-  }, []);
+  }, [userTimezone]);
+
+  // Helper function to safely format dates
+  const formatDate = (dateField: any, formatString: string = "MMM d") => {
+    if (!dateField) return "—";
+    
+    try {
+      if (typeof dateField === 'string') {
+        return format(new Date(dateField), formatString);
+      } else if (dateField.userDate || dateField.utc) {
+        // Handle TimezoneAwareDate format
+        const dateToUse = dateField.userDate || dateField.utc;
+        return format(new Date(dateToUse), formatString);
+      }
+      return "—";
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "—";
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      {/* 💸 Total Monthly Spend */}
-      <Card>
+      {/* 💸 Total Recurring */}
+      <Card className="bg-background border border-border text-foreground shadow">
         <CardHeader>
-          <CardTitle className="text-md text-muted-foreground">Total Recurring</CardTitle>
+          <CardTitle className="text-md text-muted-foreground">
+            Total Recurring
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">${summary?.totalMonthlySpend.toFixed(2)}</p>
-        </CardContent>
-      </Card>
-
-      {/* ⏰ Next Payment */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-md text-muted-foreground">Next Payment</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{summary?.nextPaymentName || "—"}</p>
-          <p className="text-sm text-muted-foreground">
-            {summary?.nextPaymentDate
-              ? format(new Date(summary.nextPaymentDate), "MMM d")
-              : "—"}
+          <p className="text-2xl font-bold">
+            ${summary?.totalMonthlySpend.toFixed(2) ?? "0.00"}
           </p>
         </CardContent>
       </Card>
 
-      {/* 📋 Upcoming List (with count) */}
-      <Card className="overflow-hidden">
+      {/* ⏰ Next Payment */}
+      <Card className="bg-background border border-border text-foreground shadow">
+        <CardHeader>
+          <CardTitle className="text-md text-muted-foreground">
+            Next Payment
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-lg font-semibold">
+            {summary?.nextPaymentName || "—"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {formatDate(summary?.nextPaymentDate)}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* 📋 Upcoming List */}
+      <Card className="bg-background border border-border text-foreground shadow overflow-hidden">
         <CardHeader>
           <CardTitle className="text-md text-muted-foreground">
             Upcoming Payments
@@ -74,7 +105,7 @@ export default function SummaryTiles() {
                 <div className="flex flex-col">
                   <span className="font-medium">{expense.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {format(new Date(expense.nextTriggerDate), "MMM d")}
+                    {formatDate(expense.nextTriggerDate)}
                   </span>
                 </div>
               </div>
