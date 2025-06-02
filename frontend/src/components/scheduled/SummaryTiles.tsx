@@ -1,12 +1,7 @@
+// Updated SummaryTiles.tsx - Receives data as props
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { 
-  getScheduledSummary, 
-  ScheduledSummary, 
-  getUserTimezone,
-  formatScheduledExpenseDate 
-} from "@/api/scheduledExpense";
+import { ScheduledSummary } from "@/api/scheduledExpense";
 
 const dotColors = [
   "bg-emerald-400",
@@ -17,23 +12,12 @@ const dotColors = [
   "bg-red-400",
 ];
 
-export default function SummaryTiles() {
-  const [summary, setSummary] = useState<ScheduledSummary | null>(null);
-  const userTimezone = getUserTimezone();
+interface SummaryTilesProps {
+  summary: ScheduledSummary | null;
+  loading: boolean;
+}
 
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const res = await getScheduledSummary(userTimezone);
-        setSummary(res.data);
-      } catch (err) {
-        console.error("Failed to load scheduled summary:", err);
-      }
-    };
-
-    fetchSummary();
-  }, [userTimezone]);
-
+export default function SummaryTiles({ summary, loading }: SummaryTilesProps) {
   // Helper function to safely format dates
   const formatDate = (dateField: any, formatString: string = "MMM d") => {
     if (!dateField) return "—";
@@ -52,6 +36,23 @@ export default function SummaryTiles() {
       return "—";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="bg-background border border-border text-foreground shadow animate-pulse">
+            <CardHeader>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-muted rounded w-1/2"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

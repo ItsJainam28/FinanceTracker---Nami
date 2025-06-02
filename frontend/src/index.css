@@ -1,4 +1,41 @@
 @import "tailwindcss";
+/* Hide scrollbar - cross-browser */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted));
+}
+
+.sidebar-wrapper [data-sidebar="trigger"].md\\:hidden {
+  display: none !important;
+}
 
 @theme {
   --color-background: oklch(1 0 0);
@@ -20,7 +57,6 @@
   --color-border: oklch(0.92 0.004 286.32);
   --color-input: oklch(0.92 0.004 286.32);
   --color-ring: oklch(0.705 0.213 47.604);
-
   --radius: 0.65rem;
 }
 
@@ -68,26 +104,3 @@
   --color-ring: oklch(0.646 0.222 41.116);
 }
 
-/* Hide scrollbar - cross-browser */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.custom-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scroll::-webkit-scrollbar-thumb {
-  background-color: theme(colors.muted.foreground);
-  border-radius: 9999px;
-}
-.custom-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: theme(colors.muted.foreground) transparent;
-}

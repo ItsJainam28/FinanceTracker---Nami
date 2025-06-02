@@ -28,7 +28,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarIcon,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import EditExpenseModal from "./EditExpenseModal";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 
@@ -37,7 +43,7 @@ export const ExpenseTable: React.FC = () => {
     page: 1,
     limit: 25,
   });
-  
+
   // Ensure limit always has a default value
   const currentLimit = params.limit ?? 25;
   const [categories, setCategories] = useState<Category[]>([]);
@@ -55,7 +61,7 @@ export const ExpenseTable: React.FC = () => {
     queryKey: ["categories"],
     queryFn: () => listCategories().then((res) => res.data),
   });
-  
+
   React.useEffect(() => {
     if (categoriesData) {
       setCategories(categoriesData);
@@ -67,13 +73,15 @@ export const ExpenseTable: React.FC = () => {
     acc[category._id] = category.name;
     return acc;
   }, {} as Record<string, string>);
-  
-  const { data, status, error, refetch } = useQuery<PaginatedResponse<Expense>>({
-    queryKey: ["expenses", params],
-    queryFn: () => listExpenses(params).then((res) => res.data),
-    placeholderData: keepPreviousData,
-  });
-  
+
+  const { data, status, error, refetch } = useQuery<PaginatedResponse<Expense>>(
+    {
+      queryKey: ["expenses", params],
+      queryFn: () => listExpenses(params).then((res) => res.data),
+      placeholderData: keepPreviousData,
+    }
+  );
+
   const isLoading = status === "pending";
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -97,7 +105,7 @@ export const ExpenseTable: React.FC = () => {
   const handleDateRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setDateRangeType(value);
-    
+
     if (value !== "custom") {
       const today = new Date();
       let dateFrom: string | undefined;
@@ -105,45 +113,57 @@ export const ExpenseTable: React.FC = () => {
 
       switch (value) {
         case "today":
-          dateFrom = dateTo = today.toISOString().split('T')[0];
+          dateFrom = dateTo = today.toISOString().split("T")[0];
           break;
         case "yesterday": {
           const yesterday = new Date(today);
           yesterday.setDate(yesterday.getDate() - 1);
-          dateFrom = dateTo = yesterday.toISOString().split('T')[0];
+          dateFrom = dateTo = yesterday.toISOString().split("T")[0];
           break;
         }
         case "thisWeek": {
           const startOfWeek = new Date(today);
           startOfWeek.setDate(today.getDate() - today.getDay());
-          dateFrom = startOfWeek.toISOString().split('T')[0];
-          dateTo = today.toISOString().split('T')[0];
+          dateFrom = startOfWeek.toISOString().split("T")[0];
+          dateTo = today.toISOString().split("T")[0];
           break;
         }
         case "thisMonth": {
-          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-          dateFrom = startOfMonth.toISOString().split('T')[0];
-          dateTo = today.toISOString().split('T')[0];
+          const startOfMonth = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            1
+          );
+          dateFrom = startOfMonth.toISOString().split("T")[0];
+          dateTo = today.toISOString().split("T")[0];
           break;
         }
         case "lastMonth": {
-          const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-          const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-          dateFrom = startOfLastMonth.toISOString().split('T')[0];
-          dateTo = endOfLastMonth.toISOString().split('T')[0];
+          const startOfLastMonth = new Date(
+            today.getFullYear(),
+            today.getMonth() - 1,
+            1
+          );
+          const endOfLastMonth = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            0
+          );
+          dateFrom = startOfLastMonth.toISOString().split("T")[0];
+          dateTo = endOfLastMonth.toISOString().split("T")[0];
           break;
         }
         case "last3Months": {
           const threeMonthsAgo = new Date(today);
           threeMonthsAgo.setMonth(today.getMonth() - 3);
-          dateFrom = threeMonthsAgo.toISOString().split('T')[0];
-          dateTo = today.toISOString().split('T')[0];
+          dateFrom = threeMonthsAgo.toISOString().split("T")[0];
+          dateTo = today.toISOString().split("T")[0];
           break;
         }
         case "thisYear": {
           const startOfYear = new Date(today.getFullYear(), 0, 1);
-          dateFrom = startOfYear.toISOString().split('T')[0];
-          dateTo = today.toISOString().split('T')[0];
+          dateFrom = startOfYear.toISOString().split("T")[0];
+          dateTo = today.toISOString().split("T")[0];
           break;
         }
         default:
@@ -163,29 +183,32 @@ export const ExpenseTable: React.FC = () => {
     }
   };
 
-  const handleCustomDateChange = (type: 'from' | 'to', date: Date | undefined) => {
-    if (type === 'from') {
+  const handleCustomDateChange = (
+    type: "from" | "to",
+    date: Date | undefined
+  ) => {
+    if (type === "from") {
       setFromDate(date);
       if (date) {
-        const dateStr = format(date, 'yyyy-MM-dd');
-        setParams(prev => ({ ...prev, dateFrom: dateStr, page: 1 }));
+        const dateStr = format(date, "yyyy-MM-dd");
+        setParams((prev) => ({ ...prev, dateFrom: dateStr, page: 1 }));
       } else {
-        setParams(prev => ({ ...prev, dateFrom: undefined, page: 1 }));
+        setParams((prev) => ({ ...prev, dateFrom: undefined, page: 1 }));
       }
     } else {
       setToDate(date);
       if (date) {
-        const dateStr = format(date, 'yyyy-MM-dd');
-        setParams(prev => ({ ...prev, dateTo: dateStr, page: 1 }));
+        const dateStr = format(date, "yyyy-MM-dd");
+        setParams((prev) => ({ ...prev, dateTo: dateStr, page: 1 }));
       } else {
-        setParams(prev => ({ ...prev, dateTo: undefined, page: 1 }));
+        setParams((prev) => ({ ...prev, dateTo: undefined, page: 1 }));
       }
     }
   };
 
   const handleAmountRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    
+
     if (value !== "custom") {
       let amountMin: number | undefined;
       let amountMax: number | undefined;
@@ -232,18 +255,18 @@ export const ExpenseTable: React.FC = () => {
     }
   };
 
-  const handleCustomAmountChange = (type: 'min' | 'max', value: string) => {
-    const numValue = value !== '' ? Number(value) : undefined;
+  const handleCustomAmountChange = (type: "min" | "max", value: string) => {
+    const numValue = value !== "" ? Number(value) : undefined;
     setParams((prev) => ({
       ...prev,
-      ...(type === 'min' ? { amountMin: numValue } : {}),
-      ...(type === 'max' ? { amountMax: numValue } : {}),
+      ...(type === "min" ? { amountMin: numValue } : {}),
+      ...(type === "max" ? { amountMax: numValue } : {}),
       page: 1,
     }));
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg shadow-sm">
+    <div className="bg-card border border-border rounded-lg shadow-sm flex flex-col h-[75vh] max-h-[75vh] scroll-smooth ">
       {/* Filters */}
       <div className="p-6 space-y-4">
         {/* Search */}
@@ -291,7 +314,9 @@ export const ExpenseTable: React.FC = () => {
                         {fromDate ? (
                           format(fromDate, "MMM dd, yyyy")
                         ) : (
-                          <span className="text-muted-foreground">Pick date</span>
+                          <span className="text-muted-foreground">
+                            Pick date
+                          </span>
                         )}
                         <CalendarIcon className="ml-2 h-4 w-4" />
                       </Button>
@@ -300,7 +325,9 @@ export const ExpenseTable: React.FC = () => {
                       <Calendar
                         mode="single"
                         selected={fromDate}
-                        onSelect={(date) => handleCustomDateChange('from', date)}
+                        onSelect={(date) =>
+                          handleCustomDateChange("from", date)
+                        }
                       />
                     </PopoverContent>
                   </Popover>
@@ -314,7 +341,9 @@ export const ExpenseTable: React.FC = () => {
                         {toDate ? (
                           format(toDate, "MMM dd, yyyy")
                         ) : (
-                          <span className="text-muted-foreground">Pick date</span>
+                          <span className="text-muted-foreground">
+                            Pick date
+                          </span>
                         )}
                         <CalendarIcon className="ml-2 h-4 w-4" />
                       </Button>
@@ -323,7 +352,7 @@ export const ExpenseTable: React.FC = () => {
                       <Calendar
                         mode="single"
                         selected={toDate}
-                        onSelect={(date) => handleCustomDateChange('to', date)}
+                        onSelect={(date) => handleCustomDateChange("to", date)}
                       />
                     </PopoverContent>
                   </Popover>
@@ -355,14 +384,18 @@ export const ExpenseTable: React.FC = () => {
                   type="number"
                   placeholder="Min"
                   className="w-24"
-                  onChange={(e) => handleCustomAmountChange('min', e.target.value)}
+                  onChange={(e) =>
+                    handleCustomAmountChange("min", e.target.value)
+                  }
                 />
                 <span className="text-sm text-muted-foreground">to</span>
                 <Input
                   type="number"
                   placeholder="Max"
                   className="w-24"
-                  onChange={(e) => handleCustomAmountChange('max', e.target.value)}
+                  onChange={(e) =>
+                    handleCustomAmountChange("max", e.target.value)
+                  }
                 />
               </div>
             )}
@@ -394,106 +427,119 @@ export const ExpenseTable: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold">Name</TableHead>
-              <TableHead className="font-semibold">Amount</TableHead>
-              <TableHead className="font-semibold">Date</TableHead>
-              <TableHead className="font-semibold">Category</TableHead>
-              <TableHead className="font-semibold">Type</TableHead>
-              <TableHead className="font-semibold text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12">
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-4 h-4 bg-primary rounded-full animate-pulse"></div>
-                    <span className="text-muted-foreground">Loading expenses...</span>
-                  </div>
-                </TableCell>
+      <div className="flex-1 overflow-hidden ">
+        <div className="h-full overflow-y-auto custom-scrollbar">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Amount</TableHead>
+                <TableHead className="font-semibold">Date</TableHead>
+                <TableHead className="font-semibold">Category</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold text-right">
+                  Actions
+                </TableHead>
               </TableRow>
-            ) : data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12">
-                  <div className="text-muted-foreground">
-                    <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No expenses found</p>
-                    <p className="text-sm">Try adjusting your filters</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              data?.data.map((expense) => (
-                <TableRow key={expense._id} className="hover:bg-muted/30 transition-colors">
-                  <TableCell className="font-medium">{expense.name}</TableCell>
-                  <TableCell className="font-mono">
-                    <span className="text-primary font-semibold">
-                      ${expense.amount.toFixed(2)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(expense.date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                      {expense.categoryId
-                        ? categoryMap[expense.categoryId]
-                        : "Uncategorized"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      expense.isRecurring 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {expense.isRecurring ? "Recurring" : "One-time"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditing(expense)}
-                        className="h-8 px-3"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setConfirmId(expense._id);
-                          setConfirmOpen(true);
-                        }}
-                        className="h-8 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        Delete
-                      </Button>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 bg-primary rounded-full animate-pulse"></div>
+                      <span className="text-muted-foreground">
+                        Loading expenses...
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : data?.data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12">
+                    <div className="text-muted-foreground">
+                      <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No expenses found</p>
+                      <p className="text-sm">Try adjusting your filters</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data?.data.map((expense) => (
+                  <TableRow
+                    key={expense._id}
+                    className="hover:bg-muted/30 transition-colors"
+                  >
+                    <TableCell className="font-medium">
+                      {expense.name}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      <span className="text-primary font-semibold">
+                        ${expense.amount.toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(expense.date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                        {expense.categoryId
+                          ? categoryMap[expense.categoryId]
+                          : "Uncategorized"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          expense.isRecurring
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {expense.isRecurring ? "Recurring" : "One-time"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing(expense)}
+                          className="h-8 px-3"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setConfirmId(expense._id);
+                            setConfirmOpen(true);
+                          }}
+                          className="h-8 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Pagination */}
       {data && data.meta.totalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-border">
           <div className="flex items-center text-sm text-muted-foreground">
-            Showing {((params.page ?? 1) - 1) * currentLimit + 1} to{' '}
-            {Math.min((params.page ?? 1) * currentLimit, data.meta.total)} of{' '}
+            Showing {((params.page ?? 1) - 1) * currentLimit + 1} to{" "}
+            {Math.min((params.page ?? 1) * currentLimit, data.meta.total)} of{" "}
             {data.meta.total} results
           </div>
 
@@ -514,20 +560,23 @@ export const ExpenseTable: React.FC = () => {
             </Button>
 
             <div className="flex items-center space-x-1">
-              {Array.from({ length: Math.min(5, data.meta.totalPages) }, (_, i) => {
-                const page = i + 1;
-                return (
-                  <Button
-                    key={page}
-                    size="sm"
-                    variant={params.page === page ? 'default' : 'ghost'}
-                    onClick={() => setParams((prev) => ({ ...prev, page }))}
-                    className="h-8 w-8 p-0"
-                  >
-                    {page}
-                  </Button>
-                );
-              })}
+              {Array.from(
+                { length: Math.min(5, data.meta.totalPages) },
+                (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <Button
+                      key={page}
+                      size="sm"
+                      variant={params.page === page ? "default" : "ghost"}
+                      onClick={() => setParams((prev) => ({ ...prev, page }))}
+                      className="h-8 w-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  );
+                }
+              )}
             </div>
 
             <Button
@@ -577,7 +626,7 @@ export const ExpenseTable: React.FC = () => {
           initial={{
             name: editing.name,
             amount: editing.amount,
-            date: editing.date.split('T')[0],
+            date: editing.date.split("T")[0],
             categoryId: editing.categoryId,
           }}
           categories={categories}
@@ -603,6 +652,7 @@ export const ExpenseTable: React.FC = () => {
           }}
         />
       )}
+      
     </div>
   );
 };

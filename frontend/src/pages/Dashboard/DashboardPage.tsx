@@ -15,6 +15,7 @@ import SpendingByCategoryChart from "@/components/dashboard/SpendingByCategoryCh
 import DailyTrendChart from "@/components/dashboard/DailyTrendChart";
 import MonthlyComparisonChart from "@/components/dashboard/MonthlyComparisonChart";
 import CumulativeSpendingChart from "@/components/dashboard/CumulativeSpendingChart";
+import { NavigationBar } from "@/components/common/Navigationbar";
 
 
 export default function DashboardPage() {
@@ -22,6 +23,10 @@ export default function DashboardPage() {
   const [budgetTracking, setBudgetTracking] = useState<BudgetTrackingEntry[]>([]);
   const [cumulativeData, setCumulativeData] = useState<CumulativeSpendingEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const breadcrumbItems = [
+    { label: "Home", href: "/dashboard" },
+    { label: "Dashboard", isCurrentPage: true }
+  ];
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -48,50 +53,62 @@ export default function DashboardPage() {
 
   if (loading || !summary) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        Loading…
+      <div className="flex flex-col min-h-screen bg-background">
+        <NavigationBar items={breadcrumbItems} />
+        <div className="flex-1 flex items-center justify-center text-foreground">
+          Loading…
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-muted text-muted-foreground">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            {/* <TabsTrigger value="top">Top Expenses</TabsTrigger> */}
-          </TabsList>
+    <div className="flex flex-col min-h-screen bg-background">
+      <NavigationBar items={breadcrumbItems} />
+      
+      <main className="flex-1 text-foreground px-4 py-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+  
+          </div>
 
-          <TabsContent value="overview" className="space-y-8">
-            <SummaryCards data={summary} />
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="w-full lg:w-1/2">
-                <SpendingByCategoryChart data={summary.topCategories} />
-              </div>
-              <div className="w-full lg:w-1/2">
-                <DailyTrendChart data={summary.dailyTrend} />
-              </div>
-            </div>
-          </TabsContent>
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="bg-muted text-muted-foreground">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="trends">Trends</TabsTrigger>
+              {/* <TabsTrigger value="top">Top Expenses</TabsTrigger> */}
+            </TabsList>
 
-          <TabsContent value="trends" className="space-y-8">
-            <div className="flex flex-col lg:flex-row gap-6">
-              <div className="w-full lg:w-1/2">
-                <MonthlyComparisonChart data={summary.monthlyComparison} />
+            <TabsContent value="overview" className="space-y-8">
+              <SummaryCards data={summary} />
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="w-full lg:w-1/2">
+                  <SpendingByCategoryChart data={summary.topCategories} />
+                </div>
+                <div className="w-full lg:w-1/2">
+                  <DailyTrendChart data={summary.dailyTrend} />
+                </div>
               </div>
-              <div className="w-full lg:w-1/2">
-                <CumulativeSpendingChart data={cumulativeData} />
-              </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="top" className="space-y-8">
-          
-          </TabsContent>
-        </Tabs>
-      </div>
+            <TabsContent value="trends" className="space-y-8">
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="w-full lg:w-1/2">
+                  <MonthlyComparisonChart data={summary.monthlyComparison} />
+                </div>
+                <div className="w-full lg:w-1/2">
+                  <CumulativeSpendingChart data={cumulativeData} />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="top" className="space-y-8">
+            
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
   );
 }

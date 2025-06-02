@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { getChatSession, getChatMessages, ChatSession, ChatMessage } from '@/api/assistant';
 import { Button } from "@/components/ui/button";
+import { NavigationBar } from '@/components/common/Navigationbar';
 
 export function ChatPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -17,6 +18,10 @@ export function ChatPage() {
   const handleMessagesUpdate = (newMessages: ChatMessage[]) => {
     setMessages(newMessages);
   };
+const breadcrumbItems = [
+    { label: 'Home', href: '/dashboard' },
+    { label: session?.title || 'Chat Session', isCurrentPage: true }
+  ];
 
   useEffect(() => {
     const loadChatData = async () => {
@@ -61,6 +66,7 @@ export function ChatPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-background text-muted-foreground">
+        <NavigationBar items={breadcrumbItems} />
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Loading chat...</p>
@@ -72,6 +78,7 @@ export function ChatPage() {
   if (error || !session) {
     return (
       <div className="flex items-center justify-center h-screen bg-background text-foreground">
+            <NavigationBar items={breadcrumbItems} />
         <div className="text-center max-w-md mx-auto p-6 border border-border rounded-lg bg-muted">
           <div className="text-destructive mb-4 text-sm font-medium">{error || 'Session not found'}</div>
           <Button onClick={handleBackToSidebar} variant="default">
@@ -84,6 +91,7 @@ export function ChatPage() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
+          <NavigationBar items={breadcrumbItems} />
       <ChatInterface
         session={session}
         initialMessages={messages}

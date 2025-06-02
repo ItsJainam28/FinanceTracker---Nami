@@ -1,42 +1,31 @@
-import { useEffect, useState } from "react";
-import {
-  getScheduledExpenses,
-  updateScheduledExpense,
-  deleteScheduledExpense,
-  toggleScheduledExpense,
-  getUserTimezone,
-  getDateStringForInput,
-  ScheduledExpense,
-} from "@/api/scheduledExpense";
-
+import { useState } from "react";
+import { ScheduledExpense, getDateStringForInput } from "@/api/scheduledExpense";
 import RecurringExpenseCard from "./RecurringExpenseCard";
 import EditScheduledExpenseModal from "./EditScheduledExpenseModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import { toast } from "sonner";
 
-export default function RecurringExpenseGrid() {
-  const [expenses, setExpenses] = useState<ScheduledExpense[]>([]);
-  const [loading, setLoading] = useState(true);
+interface RecurringExpenseGridProps {
+  expenses: ScheduledExpense[];
+  loading: boolean;
+  onUpdate: (id: string, data: {
+    name: string;
+    amount: number;
+    endDate?: string | null;
+    isActive: boolean;
+  }) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onToggle: (id: string) => Promise<void>;
+}
+
+export default function RecurringExpenseGrid({ 
+  expenses, 
+  loading, 
+  onUpdate, 
+  onDelete, 
+  onToggle 
+}: RecurringExpenseGridProps) {
   const [editing, setEditing] = useState<null | ScheduledExpense>(null);
   const [toDelete, setToDelete] = useState<null | ScheduledExpense>(null);
-  
-  const userTimezone = getUserTimezone(); // Get user's timezone
-
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const res = await getScheduledExpenses(userTimezone, "active");
-        console.log("Fetched scheduled expenses:", res.data);
-        setExpenses(res.data);
-      } catch (err) {
-        console.error("Failed to load scheduled expenses:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExpenses();
-  }, [userTimezone]);
 
   const handleSave = async (updated: {
     name: string;
@@ -47,50 +36,44 @@ export default function RecurringExpenseGrid() {
     if (!editing) return;
 
     try {
-      const res = await updateScheduledExpense(userTimezone, editing._id, updated);
-      setExpenses((prev) =>
-        prev.map((e) => (e._id === editing._id ? res.data : e))
-      );
+      await onUpdate(editing._id, updated);
       setEditing(null);
     } catch (err) {
-      console.error("Failed to update scheduled expense", err);
-      toast.error("Failed to update scheduled expense");
+      // Error handling is done in the parent component
     }
   };
 
   const confirmDelete = async () => {
     if (!toDelete) return;
     try {
-      await deleteScheduledExpense(toDelete._id);
-      setExpenses((prev) => prev.filter((e) => e._id !== toDelete._id));
-      toast.success("Scheduled expense deleted");
+      await onDelete(toDelete._id);
       setToDelete(null);
     } catch (err) {
-      console.error("Delete failed", err);
-      toast.error("Failed to delete scheduled expense");
+   
     }
   };
 
   const handleToggle = async (id: string) => {
     try {
-      const res = await toggleScheduledExpense(id);
-      setExpenses((prev) =>
-        prev.map((e) =>
-          e._id === id ? { ...e, isActive: res.data.isActive } : e
-        )
-      );
-      toast.success(res.data.isActive ? "Resumed" : "Paused");
+      await onToggle(id);
     } catch (err) {
-      console.error("Toggle failed", err);
-      toast.error("Failed to toggle status");
+      // Error handling is done in the parent component
     }
   };
 
   if (loading) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Loading scheduled expenses...
-      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-2xl p-5 bg-background border border-border animate-pulse">
+            <div className="space-y-3">
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-3 bg-muted rounded w-1/2"></div>
+              <div className="h-6 bg-muted rounded w-1/4"></div>
+            </div>
+          </div>
+        ))}
+      </div>
     );
   }
 

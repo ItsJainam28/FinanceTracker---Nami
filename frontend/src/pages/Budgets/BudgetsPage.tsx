@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import BudgetStatsModal from "@/components/budget/BudgetStatsModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import EditRecurringBudgetModal from "@/components/budget/EditRecurringBudgetModal";
+import { NavigationBar } from "@/components/common/Navigationbar";
 
 interface RecurringBudget {
   _id: string;
@@ -51,7 +52,10 @@ export default function BudgetPage() {
     endMonth: null as number | null,
     endYear: null as number | null,
   });
-
+  const breadcrumbItems = [
+    { label: "Home", href: "/dashboard" },
+    { label: "Budgets", isCurrentPage: true },
+  ]
   useEffect(() => {
     fetchData();
   }, []);
@@ -118,7 +122,8 @@ export default function BudgetPage() {
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-background text-foreground px-6 py-10">
+    <div className="flex-1 min-h-screen bg-background text-foreground ">
+        <NavigationBar items={breadcrumbItems} />
       <div className="max-w-7xl mx-auto space-y-8">
         <h1 className="text-3xl font-extrabold">Budgets</h1>
 

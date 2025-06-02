@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import api from "@/api/axiosInstance";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { cn } from "@/lib/utils";
+import { NavigationBar } from "@/components/common/Navigationbar";
 
 interface Category {
   _id: string;
@@ -16,6 +17,10 @@ export default function CategoriesPage() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/dashboard" },
+    { label: "Categories", isCurrentPage: true }
+  ];
   const fetchCategories = async () => {
     try {
       const res = await api.get("/categories");
@@ -52,7 +57,8 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-6 py-14">
+    <div className="min-h-screen bg-background text-foreground ">
+            <NavigationBar items={breadcrumbItems} />
       <div className="max-w-4xl mx-auto space-y-10">
         <div className="space-y-2">
           <h1 className="text-4xl font-extrabold tracking-tight">Manage Categories</h1>

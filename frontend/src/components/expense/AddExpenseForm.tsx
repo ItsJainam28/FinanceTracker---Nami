@@ -6,15 +6,39 @@ import { CalendarIcon } from "lucide-react";
 import { createExpense } from "@/api/expenses";
 import { listCategories, Category } from "@/api/category";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Calendar } from "../ui/calendar";
 
-export default function AddExpenseForm() {
+export default function AddExpenseForm({onSuccess}: { onSuccess?: () => void }) {
+  const qc = useQueryClient();
+  
+  const mutation = useMutation({
+    mutationFn: (payload: {
+      name: string;
+      amount: number;
+      date: string;
+      categoryId: string;
+      isRecurring: boolean;
+    }) => createExpense(payload),
+    onSuccess: () => {
+      // 1) Invalidate any “expenses” queries. That signals the table’s useQuery to refetch.
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+
+
+      // 3) Show a success toast (optional)
+      toast.success("Expense added!");
+    },
+    onError: () => {
+      toast.error("Failed to add expense.");
+    },
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
     date: "",
     categoryId: "",
   });
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -24,6 +48,8 @@ export default function AddExpenseForm() {
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
 
+
+  
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -34,15 +60,17 @@ export default function AddExpenseForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      await createExpense({
-        name: formData.name,
-        amount: Number(formData.amount),
-        date: formData.date,
-        categoryId: formData.categoryId,
-        isRecurring: false,
-      });
+
+    await mutation.mutateAsync({
+      name: formData.name,
+      amount: Number(formData.amount),
+      date: formData.date,
+      categoryId: formData.categoryId,
+      isRecurring: false,
+    });
       toast.success("Expense added successfully!");
       setFormData({ name: "", amount: "", date: "", categoryId: "" });
+      if (onSuccess) onSuccess(); // Call the success callback if provided
     } catch (err) {
       console.error("Failed to create expense:", err);
       toast.error("Failed to create expense.");
@@ -52,108 +80,98 @@ export default function AddExpenseForm() {
   };
 
   return (
-    <div className="min-h-screen px-8 py-14 bg-black text-white">
-      <div className="max-w-4xl mx-auto space-y-10">
+    <div className="w-full max-w-md mx-auto">
+      <div className="space-y-6">
+        {/* Name */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight">Add Expense</h1>
-        
+          <Label htmlFor="name" className="text-sm font-medium">
+            Expense Name
+          </Label>
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="e.g. Spotify Subscription"
+            className="w-full"
+            required
+          />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-8 bg-zinc-900 p-10 rounded-xl border border-zinc-800 shadow-2xl"
-        >
-          {/* Name */}
-          <div>
-            <Label htmlFor="name" className="text-sm">Expense Name</Label>
-            <p className="text-xs text-muted-foreground mb-1">
-              This could be anything like "Netflix", "Uber", or "Dinner at Olive Garden".
-            </p>
+        {/* Amount */}
+        <div className="space-y-2">
+          <Label htmlFor="amount" className="text-sm font-medium">
+            Amount
+          </Label>
+          <Input
+            id="amount"
+            name="amount"
+            type="number"
+            step="0.01"
+            min="0"
+            value={formData.amount}
+            onChange={handleChange}
+            placeholder="0.00"
+            className="w-full"
+            required
+          />
+        </div>
+
+        {/* Date */}
+        <div className="space-y-2">
+          <Label htmlFor="date" className="text-sm font-medium">
+            Date
+          </Label>
+          <div className="relative">
             <Input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
+              id="date"
+              name="date"
+              type="date"
+              value={formData.date}
               onChange={handleChange}
-              placeholder="e.g. Spotify Subscription"
-              className="bg-zinc-800 border-zinc-700 text-white"
+              className="w-full pr-10"
               required
             />
+            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
+        </div>
 
-          {/* Amount */}
-          <div>
-            <Label htmlFor="amount" className="text-sm">Amount</Label>
-            <p className="text-xs text-muted-foreground mb-1">
-              Enter the cost of the transaction (in your default currency).
-            </p>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              value={formData.amount}
-              onChange={handleChange}
-              placeholder="e.g. 18.99"
-              className="bg-zinc-800 border-zinc-700 text-white"
-              required
-            />
-          </div>
+        {/* Category */}
+        <div className="space-y-2">
+          <Label htmlFor="categoryId" className="text-sm font-medium">
+            Category
+          </Label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            value={formData.categoryId}
+            onChange={handleChange}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            required
+          >
+            <option value="" disabled>Select category</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {/* Date */}
-          <div>
-            <Label htmlFor="date" className="text-sm">Date</Label>
-            <p className="text-xs text-muted-foreground mb-1">
-              The date this expense occurred or will occur.
-            </p>
-            <div className="relative">
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="bg-zinc-800 border-zinc-700 text-white pr-10"
-                required
-              />
-              <CalendarIcon className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Category */}
-          <div>
-            <Label htmlFor="categoryId" className="text-sm">Category</Label>
-            <p className="text-xs text-muted-foreground mb-1">
-              Helps group this expense when viewing stats or budgets.
-            </p>
-            <select
-              id="categoryId"
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-              className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white px-3 py-2"
-              required
-            >
-              <option value="" disabled>Select category</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Submit */}
-          <div className="pt-6">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-black text-base font-medium py-2.5 hover:bg-gray-200 transition"
-            >
-              {loading ? "Adding..." : "Add Expense"}
-            </Button>
-          </div>
-        </form>
+        {/* Submit */}
+        <div className="pt-4">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full"
+            onClick={handleSubmit}
+          >
+            {loading ? "Adding..." : "Add Expense"}
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
+
