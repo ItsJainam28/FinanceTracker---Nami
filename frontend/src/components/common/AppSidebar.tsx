@@ -24,7 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import api from "@/api/axiosInstance";
-
+import logoUrl from "@/assets/nami-logo.svg";
 export default function AppSidebar(
   props: React.ComponentProps<typeof Sidebar>
 ) {
@@ -66,10 +66,7 @@ export default function AppSidebar(
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="p-0">
               <Link to="/dashboard" className="flex items-center gap-3">
-                <ArrowUpCircleIcon className="h-8 w-8" />
-                <span className="text-2xl font-extrabold tracking-tight">
-                  Finance<span className="font-black">Tracker</span>
-                </span>
+              <img src={logoUrl} alt="Nami Logo" className="h-8 w-auto" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

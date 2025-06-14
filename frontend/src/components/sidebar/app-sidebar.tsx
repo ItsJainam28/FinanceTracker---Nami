@@ -1,12 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import api from "@/api/axiosInstance";
-
-import {
-  Command,
-  MessageSquare,
-  MoreVertical,
-} from "lucide-react";
+import { Command, MessageSquare, MoreVertical } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -21,10 +16,17 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { navItems } from "@/components/sidebar/nav-items";
-import { createChatSession, getChatSessions, deleteSession, updateSessionTitle, ChatSession } from "@/api/assistant";
+import {
+  createChatSession,
+  getChatSessions,
+  deleteSession,
+  updateSessionTitle,
+  ChatSession,
+} from "@/api/assistant";
 import { useNavigate } from "react-router-dom";
 import { NavProjects } from "./nav-projects";
-
+import logo from "@/assets/please-work.svg";
+import { NamiLogo, NamiLogoAnimated } from "@/components/ui/nami-logo";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = useState({
     name: "User",
@@ -79,17 +81,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handleDeleteSession = async (sessionId: string) => {
     try {
       await deleteSession(sessionId);
-      setSessions(prev => prev.filter(session => session._id !== sessionId));
+      setSessions((prev) =>
+        prev.filter((session) => session._id !== sessionId)
+      );
     } catch (err) {
       console.error("Failed to delete session:", err);
     }
   };
 
-  const handleUpdateSessionTitle = async (sessionId: string, newTitle: string) => {
+  const handleUpdateSessionTitle = async (
+    sessionId: string,
+    newTitle: string
+  ) => {
     try {
       await updateSessionTitle(sessionId, newTitle);
-      setSessions(prev =>
-        prev.map(session =>
+      setSessions((prev) =>
+        prev.map((session) =>
           session._id === sessionId ? { ...session, title: newTitle } : session
         )
       );
@@ -98,50 +105,46 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
-  const projectsData = sessions.map(session => ({
+  const projectsData = sessions.map((session) => ({
     _id: session._id,
     name: session.title,
     url: `/chat/${session._id}`,
     icon: MessageSquare,
   }));
-
+  console.log("Projects Data:", logo);
   return (
-  
-      <Sidebar variant="inset" className="bg-background text-foreground border-r border-border shadow-sm"  collapsible="icon" {...props}>
-          <SidebarHeader>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg" asChild>
-                  <a href="#">
-                    <div className="bg-muted text-muted-foreground flex aspect-square size-8 items-center justify-center rounded-lg cursor-pointer">
-                      <Command className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-medium">Finance Tracker</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        Track that Money!
-                      </span>
-                    </div>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarHeader>
+    <Sidebar
+      variant="inset"
+      className="bg-background text-foreground border-r border-border shadow-sm"
+      collapsible="icon"
+      {...props}
+    >
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="#" className="flex items-center justify-start">
+                <NamiLogoAnimated />
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-          <SidebarContent>
-            <NavMain items={navItems} />
-            <NavProjects
-              projects={projectsData}
-              onNewChat={handleNewChat}
-              updateSessionTitle={handleUpdateSessionTitle}
-              deleteSession={handleDeleteSession}
-            />
-          </SidebarContent>
+      <SidebarContent>
+        <NavMain items={navItems} />
+        <NavProjects
+          projects={projectsData}
+          onNewChat={handleNewChat}
+          updateSessionTitle={handleUpdateSessionTitle}
+          deleteSession={handleDeleteSession}
+        />
+      </SidebarContent>
 
-          <SidebarFooter>
-            <NavUser user={user} />
-          </SidebarFooter>
-          <SidebarRail />  
-        </Sidebar>
+      <SidebarFooter>
+        <NavUser user={user} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 }

@@ -1,8 +1,10 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { LoginForm } from "@/components/login-form";
 import api from "@/api/axiosInstance";
+import { useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
 
 interface LoginFormInputs {
   email: string;
@@ -12,66 +14,75 @@ interface LoginFormInputs {
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
   const navigate = useNavigate();
+  const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string; title?: string } | null>(null);
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
+      // Clear any previous alerts
+      setAlert(null);
+      
       const response = await api.post("/auth/login", data);
       const { token } = response.data;
+      
+      // Show success alert
+      setAlert({
+        type: 'success',
+        title: 'Login successful!',
+        message: 'Welcome back! Redirecting to your dashboard...'
+      });
+      
+      // Store token and navigate after a brief delay to show the success message
       localStorage.setItem("token", token);
-      navigate("/dashboard");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+      
     } catch (error: any) {
       console.error(error.response?.data || error.message);
-      alert(error.response?.data?.error || "Login failed. Please try again.");
+      
+      // Show error alert
+      setAlert({
+        type: 'error',
+        title: 'Login failed',
+        message: error.response?.data?.error || "Invalid credentials. Please try again."
+      });
     }
   };
 
   return (
-    <div className="flex min-h-screen">
-      
-      {/* Left Side */}
-      <div className="w-3/5 bg-gray-800 text-white flex flex-col justify-center items-center p-8">
-        <h1 className="text-4xl font-bold mb-4">Welcome to FinanceTracker!</h1>
-        <p className="text-lg">Track your budget, control your expenses, grow your wealth.</p>
-        {/* Later you can add an image/illustration here */}
-      </div>
+    <div className="dark hide-scrollbar scrollbar-hide">
+      <div className="grid min-h-screen lg:grid-cols-2 bg-background text-foreground">
+        
+        {/* Left Side */}
+        <div className="bg-black flex items-center justify-center p-8 overflow-hidden scrollbar-hide">
+          <img 
+            src="/src/assets/nami-poster-1.svg" 
+            alt="Nami Poster" 
+            className="h-full w-full object-cover scrollbar-hide h-screen lg:h-auto lg:w-auto lg:max-w-none lg:max-h-full scale-140"
+          />
+        </div>
 
-      {/* Right Side */}
-      <div className="w-2/5 flex justify-center items-center bg-gray-50 p-8">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="bg-white shadow-md rounded-lg p-8 w-full max-w-md"
-        >
-          <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-
-          <div className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Email"
-              {...register("email", { required: "Email is required" })}
+        {/* Right Side */}
+        <div className="bg-background flex justify-center items-center p-8 scrollbar-hide">
+          <div className="w-full max-w-md space-y-6">
+            {/* Alert Component */}
+            {alert && (
+              <Alert variant={alert.type === 'error' ? 'destructive' : 'default'}>
+                {alert.type === 'error' ? <AlertCircleIcon /> : <CheckCircle2Icon />}
+                {alert.title && <AlertTitle>{alert.title}</AlertTitle>}
+                <AlertDescription>{alert.message}</AlertDescription>
+              </Alert>
+            )}
+            
+            <LoginForm 
+              onSubmit={handleSubmit(onSubmit)}
+              register={register}
+              errors={errors}
             />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-
-            <Input
-              type="password"
-              placeholder="Password"
-              {...register("password", { required: "Password is required" })}
-            />
-            {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
           </div>
+        </div>
 
-          <Button className="w-full mt-6" type="submit">
-            Login
-          </Button>
-
-          <p className="text-center text-sm text-gray-600 mt-4">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-blue-600 hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </form>
       </div>
-
     </div>
   );
 }

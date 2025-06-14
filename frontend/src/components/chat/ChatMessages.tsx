@@ -3,7 +3,7 @@ import { MessageBubble } from './MessageBubble';
 import { TypingIndicator } from './TypingIndicator';
 import { ChatMessage } from '@/api/assistant';
 import { RefreshCw } from 'lucide-react';
-
+import nLetterAvatar from "@/assets/n-letter.png";
 interface ChatMessagesProps {
   messages: ChatMessage[];
   isLoading: boolean;

@@ -156,7 +156,7 @@ export function ChatInterface({
     <div className="flex flex-col h-full bg-background text-foreground">
       <ChatHeader session={session} />
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-2 custom-scroll">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-2 scrollbar-hide">
         <div className="flex flex-col gap-4">
           <ChatMessages 
             messages={messages}
