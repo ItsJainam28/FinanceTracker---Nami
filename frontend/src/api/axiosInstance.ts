@@ -1,7 +1,12 @@
 import axios from "axios";
+import dotenv from 'dotenv';
+
+dotenv.config();
+// Create an axios instance with a base URL from environment variables
+
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api", // fallback if env var missing
+  baseURL: process.env.VITE_API_URL  // fallback if env var missing
 });
 
 // Attach token to every request automatically
