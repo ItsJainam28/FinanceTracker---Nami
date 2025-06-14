@@ -30,7 +30,7 @@ const app = express();
 const corsOptions = {
   origin: [
     'http://localhost:5000',    // Your backend port
-    'https://finance-tracker-frontend-mt0jz6mj4-itsjainam28s-projects.vercel.app',  // Your Vercel deployment
+    'https://finance-tracker-frontend-topaz.vercel.app',  // Your Vercel deployment
     'http://localhost:3000',    // React default (if testing locally)
     'http://localhost:5173',    // Vite default (if testing locally)
   ],
