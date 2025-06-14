@@ -5,7 +5,7 @@ import api from "@/api/axiosInstance";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
-
+import namiPoster from '@/assets/nami-poster-1.svg';
 interface SignupFormInputs {
   firstname: string;
   lastname: string;
@@ -63,7 +63,7 @@ export default function SignupPage() {
         {/* Left Side */}
         <div className="bg-black flex items-center justify-center p-8 overflow-hidden scrollbar-hide">
           <img 
-            src="/src/assets/nami-poster-1.svg" 
+            src={namiPoster} 
             alt="Nami Poster" 
             className="h-full w-full object-cover scrollbar-hide  lg:h-auto lg:w-auto lg:max-w-none lg:max-h-full scale-110"
           />
