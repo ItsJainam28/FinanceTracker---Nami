@@ -1,5 +1,5 @@
 import { type LucideIcon } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -35,10 +35,10 @@ export function NavMain({
                   isActive ? "bg-muted/50" : "hover:bg-muted"
                 }`}
               >
-                <a href={item.url} className="flex items-center gap-2">
+                 <Link to={item.url} className="flex items-center gap-2">
                   <item.icon className="size-4" />
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           );

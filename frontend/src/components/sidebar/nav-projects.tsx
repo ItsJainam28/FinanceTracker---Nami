@@ -5,6 +5,7 @@ import {
   Pencil,
   SquarePen,
   type LucideIcon,
+  Link,
 } from "lucide-react";
 
 import {
@@ -104,10 +105,10 @@ export function NavProjects({
                   />
                 </div>
               ) : (
-                <a href={item.url}>
+                <Link to={item.url}>
                   <item.icon className="text-muted-foreground" />
                   <span>{item.name}</span>
-                </a>
+                </Link>
               )}
             </SidebarMenuButton>
 
