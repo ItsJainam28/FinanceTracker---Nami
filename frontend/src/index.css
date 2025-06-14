@@ -106,3 +106,8 @@
   --color-ring: oklch(0.646 0.222 41.116);
 }
 
+[data-mobile="true"] {
+  background: oklch(var(--color-background)) !important;
+  color: oklch(var(--color-foreground)) !important;
+  border-right: 1px solid oklch(var(--color-border));
+}
