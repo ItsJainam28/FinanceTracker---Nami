@@ -49,7 +49,7 @@ export const ExpenseTable: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [showAmountFilter, setShowAmountFilter] = useState(false);
-  const [dateRangeType, setDateRangeType] = useState("");
+
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [editing, setEditing] = useState<Expense | null>(null);
@@ -74,7 +74,7 @@ export const ExpenseTable: React.FC = () => {
     return acc;
   }, {} as Record<string, string>);
 
-  const { data, status, error, refetch } = useQuery<PaginatedResponse<Expense>>(
+  const { data, status,  refetch } = useQuery<PaginatedResponse<Expense>>(
     {
       queryKey: ["expenses", params],
       queryFn: () => listExpenses(params).then((res) => res.data),
@@ -104,7 +104,7 @@ export const ExpenseTable: React.FC = () => {
 
   const handleDateRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setDateRangeType(value);
+
 
     if (value !== "custom") {
       const today = new Date();

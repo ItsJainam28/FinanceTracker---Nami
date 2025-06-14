@@ -7,9 +7,9 @@ import {
   ClipboardListIcon,
   CalendarCheckIcon,
   ListIcon,
-  BarChartIcon,
+
   LogOutIcon,
-  ArrowUpCircleIcon,
+
 } from "lucide-react";
 import {
   Sidebar,

@@ -1,5 +1,5 @@
 import AddExpenseForm from "@/components/expense/AddExpenseForm";
-import React from "react";
+
 
 export function AddExpensePage() {
   return (

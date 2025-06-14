@@ -65,7 +65,7 @@ export default function SignupPage() {
           <img 
             src="/src/assets/nami-poster-1.svg" 
             alt="Nami Poster" 
-            className="h-full w-full object-cover scrollbar-hide h-screen lg:h-auto lg:w-auto lg:max-w-none lg:max-h-full scale-110"
+            className="h-full w-full object-cover scrollbar-hide  lg:h-auto lg:w-auto lg:max-w-none lg:max-h-full scale-110"
           />
         </div>
 

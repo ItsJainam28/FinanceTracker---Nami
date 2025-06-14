@@ -1,5 +1,5 @@
 // pages/ChatPage.tsx
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { getChatSession, getChatMessages, ChatSession, ChatMessage } from '@/api/assistant';

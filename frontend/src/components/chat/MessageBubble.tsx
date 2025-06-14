@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Bot, Copy, Check } from "lucide-react";
+import { User, Copy, Check } from "lucide-react";
 import { ChatMessage } from "@/api/assistant";
 import ReactMarkdown from "react-markdown";
 import nLetterAvatar from "@/assets/n-letter.png";

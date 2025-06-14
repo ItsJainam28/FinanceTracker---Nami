@@ -24,7 +24,7 @@ export default function DailyTrendChart({ data }: Props) {
   useEffect(() => {
     const root = getComputedStyle(document.documentElement);
     const primary = root.getPropertyValue("--color-primary").trim();
-    const foreground = root.getPropertyValue("--color-foreground").trim();
+
     setThemeColor(primary);
     setFillColor(primary.replace(")", " / 0.15)").replace("oklch", "oklch")); // fade fill
   }, []);

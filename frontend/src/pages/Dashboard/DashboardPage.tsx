@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   AnalyticsSummary,
-  BudgetTrackingEntry,
+
   CumulativeSpendingEntry,
 } from "@/types/analytics";
 import {
   fetchAnalyticsSummary,
-  fetchBudgetTracking,
+
   fetchCumulativeSpending,
 } from "@/api/analytics";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -20,7 +20,7 @@ import { NavigationBar } from "@/components/common/Navigationbar";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [budgetTracking, setBudgetTracking] = useState<BudgetTrackingEntry[]>([]);
+
   const [cumulativeData, setCumulativeData] = useState<CumulativeSpendingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const breadcrumbItems = [
@@ -32,14 +32,14 @@ export default function DashboardPage() {
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const [summaryRes, budgetRes, cumulativeRes] = await Promise.all([
+        const [summaryRes,  cumulativeRes] = await Promise.all([
           fetchAnalyticsSummary(),
-          fetchBudgetTracking(),
+      
           fetchCumulativeSpending(),
         ]);
 
         setSummary(summaryRes.data);
-        setBudgetTracking(budgetRes.data);
+
         setCumulativeData(cumulativeRes.data);
       } catch (err) {
         console.error("Dashboard fetch error:", err);

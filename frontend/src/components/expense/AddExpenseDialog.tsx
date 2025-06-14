@@ -1,7 +1,7 @@
 // src/components/expense/AddExpenseDialog.tsx
-import React, { useState } from "react";
-import { Dialog, DialogTrigger, DialogContent, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, PlusIcon } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 import AddExpenseForm from "./AddExpenseForm";
 import { Button } from "../ui/button";
 

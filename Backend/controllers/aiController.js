@@ -1,6 +1,7 @@
 import ChatSession from "../models/ChatSession.js";
 import ChatMessage from "../models/ChatMessage.js";
 
+//Just a change 
 
 /* Create new chat session */
 export const createSession = async (req, res, next) => {

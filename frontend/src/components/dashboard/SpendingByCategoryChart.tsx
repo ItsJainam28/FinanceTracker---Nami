@@ -26,7 +26,7 @@ export default function SpendingByCategoryChart({ data }: Props) {
   const [barColor, setBarColor] = useState<string>("#f97316"); // fallback orange
   const [cardColor, setCardColor] = useState("#000000");
   const [textColor, setTextColor] = useState("#ffffff");
-  const [mutedColor, setMutedColor] = useState("#888888");
+
   const [borderColor, setBorderColor] = useState("#444");
 
   useEffect(() => {
@@ -46,13 +46,13 @@ export default function SpendingByCategoryChart({ data }: Props) {
 
     const primary = root.getPropertyValue("--color-primary").trim();
     const foreground = root.getPropertyValue("--color-foreground").trim();
-    const muted = root.getPropertyValue("--color-muted-foreground").trim();
+
     const card = root.getPropertyValue("--color-card").trim();
     const border = root.getPropertyValue("--color-border").trim();
 
     setBarColor(primary || "#f97316");
     setTextColor(foreground);
-    setMutedColor(muted);
+
     setCardColor(card);
     setBorderColor(border);
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import api from "@/api/axiosInstance";
-import { Command, MessageSquare, MoreVertical } from "lucide-react";
+import {  MessageSquare } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -26,7 +26,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { NavProjects } from "./nav-projects";
 import logo from "@/assets/please-work.svg";
-import { NamiLogo, NamiLogoAnimated } from "@/components/ui/nami-logo";
+import {  NamiLogoAnimated } from "@/components/ui/nami-logo";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = useState({
     name: "User",
@@ -36,7 +36,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+
 
   useEffect(() => {
     const loadSessions = async () => {
