@@ -24,7 +24,30 @@ connectDB();
 const app = express();
 
 // Middlewares
-app.use(cors());
+
+
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:5000',    // Your backend port
+    'https://finance-tracker-frontend-mt0jz6mj4-itsjainam28s-projects.vercel.app',  // Your Vercel deployment
+    'http://localhost:3000',    // React default (if testing locally)
+    'http://localhost:5173',    // Vite default (if testing locally)
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ]
+};
+
+
+app.use(cors(corsOptions));
+// app.options('/{*}', cors(corsOptions));
 app.use(express.json());
 
 // Root route
@@ -42,5 +65,5 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/recurring-budgets', recurringBudgetRoutes);
 app.use("/api/ai", aiRoutes);
 // Start server
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT} 🔥`));
