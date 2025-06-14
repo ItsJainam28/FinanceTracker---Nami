@@ -19,6 +19,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormInputs) => {
     try {
       // Clear any previous alerts
+      console.log("Vite API URL",import.meta.env.VITE_API_URL);
       setAlert(null);
       
       const response = await api.post("/auth/login", data);
