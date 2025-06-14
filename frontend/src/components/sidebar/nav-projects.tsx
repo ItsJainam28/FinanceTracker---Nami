@@ -5,7 +5,6 @@ import {
   Pencil,
   SquarePen,
   type LucideIcon,
-  Link,
 } from "lucide-react";
 
 import {
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 export function NavProjects({
   projects,

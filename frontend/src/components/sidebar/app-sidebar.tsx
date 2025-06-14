@@ -23,7 +23,7 @@ import {
   updateSessionTitle,
   ChatSession,
 } from "@/api/assistant";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { NavProjects } from "./nav-projects";
 import logo from "@/assets/please-work.svg";
 import {  NamiLogoAnimated } from "@/components/ui/nami-logo";
@@ -123,9 +123,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#" className="flex items-center justify-start">
+              <Link to="/dashboard" className="flex items-center justify-start">
                 <NamiLogoAnimated />
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
