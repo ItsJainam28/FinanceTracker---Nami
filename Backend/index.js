@@ -41,7 +41,9 @@ const corsOptions = {
     'Authorization',
     'X-Requested-With',
     'Accept',
-    'Origin'
+    'Origin',
+    'X-User-Timezone'
+
   ]
 };
 
