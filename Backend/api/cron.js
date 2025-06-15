@@ -256,7 +256,7 @@ const processRecurringItems = async () => {
 
 // API endpoint handler for Vercel
 // API endpoint handler for Vercel (updated for cron jobs)
-export default async function cron(req, res) {
+export default async function handler(req, res) {
   // Allow both GET (for cron) and POST requests
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
