@@ -2,14 +2,41 @@
     "version": 2,
     "builds": [
         {
-        "src": "index.js",
-        "use": "@vercel/node"
+            "src": "index.js",
+            "use": "@vercel/node"
         }
     ],
     "routes": [
         {
-        "src": "/(.*)",
-        "dest": "/"
+            "src": "/(.*)",
+            "dest": "/"
+        }
+    ],
+    "crons": [
+        {
+            "path": "/api/scheduledTasks",
+            "schedule": "0 0 * * *",
+            "description": "12:00 AM UTC (London, Dublin)"
+        },
+        {
+            "path": "/api/scheduledTasks",
+            "schedule": "0 5 * * *",
+            "description": "12:00 AM EST (New York, Toronto, Miami)"
+        },
+        {
+            "path": "/api/scheduledTasks",
+            "schedule": "0 6 * * *",
+            "description": "12:00 AM CST (Chicago, Dallas, Mexico City)"
+        },
+        {
+            "path": "/api/scheduledTasks",
+            "schedule": "0 8 * * *",
+            "description": "12:00 AM PST (Los Angeles, San Francisco, Vancouver)"
+        },
+        {
+            "path": "/api/scheduledTasks",
+            "schedule": "0 13 * * *",
+            "description": "12:00 AM JST (Tokyo, Seoul) / 11:00 PM CST (Beijing, Shanghai)"
         }
     ]
 }
