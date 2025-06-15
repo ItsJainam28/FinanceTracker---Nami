@@ -1,23 +1,42 @@
+import mongoose from "mongoose";
+import connectDB from "../config/db.js"; // Adjust path as needed
 import RecurringExpense from "../models/recurringExpense.js";
 import Expense from "../models/expense.js";
 import RecurringBudget from "../models/recurringBudget.js";
 import Budget from "../models/budget.js";
-import connectDB from "../config/db.js";
+
+// Enhanced connection function for serverless
+const ensureConnection = async () => {
+  if (mongoose.connection.readyState === 1) {
+    console.log("📊 Using existing MongoDB connection");
+    return;
+  }
+  
+  if (mongoose.connection.readyState === 2) {
+    console.log("⏳ MongoDB connection is connecting...");
+    // Wait for connection to be established
+    await new Promise((resolve, reject) => {
+      mongoose.connection.once('connected', resolve);
+      mongoose.connection.once('error', reject);
+      setTimeout(() => reject(new Error('Connection timeout')), 10000);
+    });
+    return;
+  }
+
+  console.log("🔌 Establishing new MongoDB connection...");
+  await connectDB();
+};
+
 // Helper function to add months to a UTC date with proper day capping
 const addMonthsUTC = (date, months) => {
   const newDate = new Date(date);
   const originalDay = newDate.getUTCDate();
-  const targetMonth = newDate.getUTCMonth() + months;
   
-  // Set the month first
-  newDate.setUTCMonth(targetMonth);
+  newDate.setUTCMonth(newDate.getUTCMonth() + months);
   
-  // If we overflowed to the next month, it means the day doesn't exist
-  // So we set it to the last day of the intended month
-  const expectedMonth = ((targetMonth % 12) + 12) % 12; // Handle negative months
-  if (newDate.getUTCMonth() !== expectedMonth) {
-    // Go to last day of the intended month
-    newDate.setUTCMonth(targetMonth + 1, 0); // Next month, day 0 = last day of target month
+  // If the day changed due to month overflow, set to last day of target month
+  if (newDate.getUTCDate() !== originalDay) {
+    newDate.setUTCDate(0); // Go to last day of previous month (which is our target)
   }
   
   return newDate;
@@ -35,7 +54,7 @@ const processMissedExpenses = async (today) => {
       { endDate: null }, 
       { endDate: { $gte: today } }
     ],
-  });
+  }).maxTimeMS(30000); // Add timeout
 
   console.log(`Found ${missedExpenses.length} recurring expenses with missed occurrences`);
 
@@ -49,14 +68,14 @@ const processMissedExpenses = async (today) => {
         // Check if we already created an expense for this date
         const dayStart = new Date(currentTriggerDate);
         dayStart.setUTCHours(0, 0, 0, 0);
-        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
         const existing = await Expense.findOne({
           userId: rec.userId,
           recurringId: rec._id,
-          date: { $gte: dayStart, $lte: dayEnd },
+          date: { $gte: dayStart, $lt: dayEnd },
           isRecurring: true,
-        });
+        }).maxTimeMS(10000);
 
         if (!existing) {
           // Create the missed expense
@@ -102,6 +121,9 @@ const processRecurringItems = async () => {
   try {
     console.log("🔁 Starting Recurring Items Processing...");
 
+    // Ensure MongoDB connection
+    await ensureConnection();
+
     // Get today in UTC
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -121,7 +143,7 @@ const processRecurringItems = async () => {
         { endDate: null }, 
         { endDate: { $gte: today } }
       ],
-    });
+    }).maxTimeMS(30000);
 
     console.log(`Found ${scheduledExpenses.length} recurring expenses scheduled for today`);
 
@@ -135,7 +157,7 @@ const processRecurringItems = async () => {
           recurringId: rec._id,
           date: { $gte: today, $lte: todayEnd },
           isRecurring: true,
-        });
+        }).maxTimeMS(10000);
 
         if (!existing) {
           // Create the expense entry
@@ -192,7 +214,7 @@ const processRecurringItems = async () => {
           },
         },
       ],
-    });
+    }).maxTimeMS(30000);
 
     console.log(`Found ${recurringBudgets.length} recurring budgets to process`);
 
@@ -202,7 +224,7 @@ const processRecurringItems = async () => {
           recurringBudgetId: rec._id,
           month: currentMonth,
           year: currentYear,
-        });
+        }).maxTimeMS(10000);
 
         if (!exists) {
           await Budget.create({
@@ -255,18 +277,19 @@ const processRecurringItems = async () => {
 };
 
 // API endpoint handler for Vercel
-// API endpoint handler for Vercel (updated for cron jobs)
 export default async function handler(req, res) {
-  // Allow both GET (for cron) and POST requests
+  // Set a longer timeout for this function
+  res.setTimeout(300000); // 5 minutes
+
   console.log(`🔗 Received request: ${req.method} ${req.url}`);
-  //Get the header
   console.log("Headers:", req.headers);
+  
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   // Check if this is a cron job request (Vercel adds specific headers)
-  const isCronJob = req.headers['vercel-cron/1.0'] === '1';
+  const isCronJob = req.headers['vercel-cron'] === '1';
   
   // For cron jobs, skip API key check
   // For manual requests, check API key
@@ -279,7 +302,7 @@ export default async function handler(req, res) {
   
   try {
     console.log(`🔄 Processing triggered by: ${isCronJob ? 'Vercel Cron' : 'Manual Request'}`);
-    connectDB(); // Ensure DB connection is established
+    
     const result = await processRecurringItems();
     
     // Return appropriate status code based on result
@@ -294,6 +317,7 @@ export default async function handler(req, res) {
     res.status(500).json({
       success: false,
       error: 'Internal server error',
+      details: error.message,
       timestamp: new Date().toISOString(),
       triggeredBy: isCronJob ? 'cron' : 'manual'
     });
