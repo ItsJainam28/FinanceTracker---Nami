@@ -15,28 +15,23 @@
     "crons": [
         {
             "path": "/api/scheduledTasks",
-            "schedule": "0 0 * * *",
-            "description": "12:00 AM UTC (London, Dublin)"
+            "schedule": "0 0 * * *"
         },
         {
             "path": "/api/scheduledTasks",
-            "schedule": "0 5 * * *",
-            "description": "12:00 AM EST (New York, Toronto, Miami)"
+            "schedule": "0 5 * * *"
         },
         {
             "path": "/api/scheduledTasks",
-            "schedule": "0 6 * * *",
-            "description": "12:00 AM CST (Chicago, Dallas, Mexico City)"
+            "schedule": "0 6 * * *"
         },
         {
             "path": "/api/scheduledTasks",
-            "schedule": "0 8 * * *",
-            "description": "12:00 AM PST (Los Angeles, San Francisco, Vancouver)"
+            "schedule": "0 8 * * *"
         },
         {
             "path": "/api/scheduledTasks",
-            "schedule": "0 13 * * *",
-            "description": "12:00 AM JST (Tokyo, Seoul) / 11:00 PM CST (Beijing, Shanghai)"
+            "schedule": "0 13 * * *"
         }
     ]
 }
