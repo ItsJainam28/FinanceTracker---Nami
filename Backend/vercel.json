@@ -14,23 +14,23 @@
     ],
     "crons": [
         {
-            "path": "/api/scheduledTasks",
+            "path": "/api/cron",
             "schedule": "0 0 * * *"
         },
         {
-            "path": "/api/scheduledTasks",
+            "path": "/api/cron",
             "schedule": "0 5 * * *"
         },
         {
-            "path": "/api/scheduledTasks",
+            "path": "/api/cron",
             "schedule": "0 6 * * *"
         },
         {
-            "path": "/api/scheduledTasks",
+            "path": "/api/cron",
             "schedule": "0 8 * * *"
         },
         {
-            "path": "/api/scheduledTasks",
+            "path": "/api/cron",
             "schedule": "0 13 * * *"
         }
     ]
