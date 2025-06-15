@@ -2,7 +2,7 @@ import RecurringExpense from "../models/recurringExpense.js";
 import Expense from "../models/expense.js";
 import RecurringBudget from "../models/recurringBudget.js";
 import Budget from "../models/budget.js";
-
+import connectDB from "../config/db.js";
 // Helper function to add months to a UTC date with proper day capping
 const addMonthsUTC = (date, months) => {
   const newDate = new Date(date);
@@ -258,6 +258,9 @@ const processRecurringItems = async () => {
 // API endpoint handler for Vercel (updated for cron jobs)
 export default async function handler(req, res) {
   // Allow both GET (for cron) and POST requests
+  console.log(`🔗 Received request: ${req.method} ${req.url}`);
+  //Get the header
+  console.log("Headers:", req.headers);
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -273,10 +276,10 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
   }
-
+  
   try {
     console.log(`🔄 Processing triggered by: ${isCronJob ? 'Vercel Cron' : 'Manual Request'}`);
-    
+    connectDB(); // Ensure DB connection is established
     const result = await processRecurringItems();
     
     // Return appropriate status code based on result
