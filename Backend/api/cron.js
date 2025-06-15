@@ -109,7 +109,7 @@ const processRecurringItems = async () => {
 
     console.log(`Processing recurring items for UTC date: ${today.toISOString()}`);
 
-    // 🔄 First, process any missed expenses (catch-up logic)
+    // 🔄 First, process any missed expenses (catch-up logic) 
     await processMissedExpenses(today);
 
     // 🔄 Process Current Recurring Expenses
@@ -256,14 +256,14 @@ const processRecurringItems = async () => {
 
 // API endpoint handler for Vercel
 // API endpoint handler for Vercel (updated for cron jobs)
-export default async function handler(req, res) {
+export default async function cron(req, res) {
   // Allow both GET (for cron) and POST requests
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   // Check if this is a cron job request (Vercel adds specific headers)
-  const isCronJob = req.headers['x-vercel-cron'] === '1';
+  const isCronJob = req.headers['vercel-cron/1.0'] === '1';
   
   // For cron jobs, skip API key check
   // For manual requests, check API key
