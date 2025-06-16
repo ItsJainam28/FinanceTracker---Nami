@@ -6,13 +6,15 @@ import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
 import namiPoster from '@/assets/nami-poster-1.svg';
+
 interface LoginFormInputs {
   email: string;
   password: string;
 }
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
+  // Add setValue to the destructuring
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<LoginFormInputs>();
   const navigate = useNavigate();
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string; title?: string } | null>(null);
 
@@ -79,6 +81,7 @@ export default function LoginPage() {
               onSubmit={handleSubmit(onSubmit)}
               register={register}
               errors={errors}
+              setValue={setValue}
             />
           </div>
         </div>
