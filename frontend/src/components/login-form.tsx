@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { UseFormRegister, FieldErrors } from "react-hook-form"
+import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form"
 import { Link } from "react-router-dom"
 
 interface LoginFormInputs {
@@ -13,6 +13,7 @@ interface LoginFormInputs {
 interface LoginFormProps extends React.ComponentProps<"form"> {
   register: UseFormRegister<LoginFormInputs>;
   errors: FieldErrors<LoginFormInputs>;
+  setValue: UseFormSetValue<LoginFormInputs>;
   className?: string;
 }
 
@@ -20,8 +21,14 @@ export function LoginForm({
   className,
   register,
   errors,
+  setValue,
   ...props
 }: LoginFormProps) {
+  const handleDemoLogin = () => {
+    setValue("email", "demo@example.com");
+    setValue("password", "demo@12345");
+  };
+
   return (
     <form className={cn("flex flex-col gap-6 scrollbar-hide", className)} {...props}>
       <div className="flex flex-col items-center gap-2 text-center scrollbar-hide">
@@ -68,9 +75,19 @@ export function LoginForm({
             <p className="text-red-500 text-sm">{errors.password.message}</p>
           )}
         </div>
-        <Button type="submit" className="w-full">
-          Login
-        </Button>
+        <div className="grid gap-3">
+          <Button type="submit" className="w-full">
+            Login
+          </Button>
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full"
+            onClick={handleDemoLogin}
+          >
+            Try Demo Account
+          </Button>
+        </div>
       </div>
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
