@@ -1,7 +1,7 @@
 // Updated SummaryTiles.tsx - Receives data as props
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
-import { ScheduledSummary } from "@/api/scheduledExpense";
+import { format, parseISO } from "date-fns";
+import { ScheduledSummary, TimezoneAwareDate } from "@/api/scheduledExpense";
 
 const dotColors = [
   "bg-emerald-400",
@@ -18,21 +18,19 @@ interface SummaryTilesProps {
 }
 
 export default function SummaryTiles({ summary, loading }: SummaryTilesProps) {
-  // Helper function to safely format dates
-  const formatDate = (dateField: any, formatString: string = "MMM d") => {
+
+  const formatTriggerDate = (dateField: TimezoneAwareDate | string | null | undefined) => {
     if (!dateField) return "—";
-    
+  
     try {
-      if (typeof dateField === 'string') {
-        return format(new Date(dateField), formatString);
-      } else if (dateField.userDate || dateField.utc) {
-        // Handle TimezoneAwareDate format
-        const dateToUse = dateField.userDate || dateField.utc;
-        return format(new Date(dateToUse), formatString);
-      }
-      return "—";
+      const rawDate =
+        typeof dateField === "string"
+          ? dateField
+          : dateField.userDate || dateField.utc;
+  
+      return format(parseISO(rawDate), "MMM d");
     } catch (error) {
-      console.error("Error formatting date:", error);
+      console.error("Error formatting trigger date:", error);
       return "—";
     }
   };
@@ -53,7 +51,8 @@ export default function SummaryTiles({ summary, loading }: SummaryTilesProps) {
       </div>
     );
   }
-
+    // Helper function to safely format dates
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       {/* 💸 Total Recurring */}
@@ -82,7 +81,7 @@ export default function SummaryTiles({ summary, loading }: SummaryTilesProps) {
             {summary?.nextPaymentName || "—"}
           </p>
           <p className="text-sm text-muted-foreground">
-            {formatDate(summary?.nextPaymentDate)}
+            {formatTriggerDate(summary?.nextPaymentDate)}
           </p>
         </CardContent>
       </Card>
@@ -106,7 +105,7 @@ export default function SummaryTiles({ summary, loading }: SummaryTilesProps) {
                 <div className="flex flex-col">
                   <span className="font-medium">{expense.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {formatDate(expense.nextTriggerDate)}
+                    {formatTriggerDate(expense.nextTriggerDate)}
                   </span>
                 </div>
               </div>
