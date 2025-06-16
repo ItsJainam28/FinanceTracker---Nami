@@ -24,25 +24,8 @@ interface SignupFormProps extends React.ComponentProps<"form"> {
 
 const currencies = [
   { value: "USD", label: "USD - US Dollar" },
-  { value: "EUR", label: "EUR - Euro" },
-  { value: "GBP", label: "GBP - British Pound" },
-  { value: "JPY", label: "JPY - Japanese Yen" },
   { value: "CAD", label: "CAD - Canadian Dollar" },
-  { value: "AUD", label: "AUD - Australian Dollar" },
-  { value: "CHF", label: "CHF - Swiss Franc" },
-  { value: "CNY", label: "CNY - Chinese Yuan" },
-  { value: "INR", label: "INR - Indian Rupee" },
-  { value: "KRW", label: "KRW - South Korean Won" },
-  { value: "SGD", label: "SGD - Singapore Dollar" },
-  { value: "HKD", label: "HKD - Hong Kong Dollar" },
-  { value: "NOK", label: "NOK - Norwegian Krone" },
-  { value: "SEK", label: "SEK - Swedish Krona" },
-  { value: "DKK", label: "DKK - Danish Krone" },
-  { value: "NZD", label: "NZD - New Zealand Dollar" },
-  { value: "MXN", label: "MXN - Mexican Peso" },
-  { value: "BRL", label: "BRL - Brazilian Real" },
-  { value: "ZAR", label: "ZAR - South African Rand" },
-  { value: "RUB", label: "RUB - Russian Ruble" },
+
 ];
 
 export function SignupForm({
