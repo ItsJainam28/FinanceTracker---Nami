@@ -23,11 +23,11 @@ export default function SpendingByCategoryChart({ data }: Props) {
   const [chartType, setChartType] = useState<"pie" | "bar">("bar");
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [randomColors, setRandomColors] = useState<string[]>([]);
-  const [barColor, setBarColor] = useState<string>("#f97316"); // fallback orange
-  const [cardColor, setCardColor] = useState("#000000");
-  const [textColor, setTextColor] = useState("#ffffff");
-
-  const [borderColor, setBorderColor] = useState("#444");
+  const [barColor, setBarColor] = useState<string>("#f97316");
+  const [cardColor, setCardColor] = useState<string>("");
+  const [textColor, setTextColor] = useState<string>("");
+  const [borderColor, setBorderColor] = useState<string>("");
+  const [colorsLoaded, setColorsLoaded] = useState(false);
 
   useEffect(() => {
     listCategories()
@@ -42,21 +42,32 @@ export default function SpendingByCategoryChart({ data }: Props) {
   }, []);
 
   useEffect(() => {
-    const root = getComputedStyle(document.documentElement);
+    // Add a small delay to ensure CSS is loaded
+    const loadColors = () => {
+      const root = getComputedStyle(document.documentElement);
 
-    const primary = root.getPropertyValue("--color-primary").trim();
-    const foreground = root.getPropertyValue("--color-foreground").trim();
+      const primary = root.getPropertyValue("--color-primary").trim();
+      const foreground = root.getPropertyValue("--color-foreground").trim();
+      const card = root.getPropertyValue("--color-card").trim();
+      const border = root.getPropertyValue("--color-border").trim();
 
-    const card = root.getPropertyValue("--color-card").trim();
-    const border = root.getPropertyValue("--color-border").trim();
+      // Only update if we actually get values from CSS custom properties
+      if (primary || foreground || card || border) {
+        setBarColor(primary || "#f97316");
+        setTextColor(foreground || "#ffffff");
+        setCardColor(card || "transparent");
+        setBorderColor(border || "#444");
+        setColorsLoaded(true);
+      } else {
+        // Retry after a short delay if CSS custom properties aren't ready
+        setTimeout(loadColors, 100);
+      }
+    };
 
-    setBarColor(primary || "#f97316");
-    setTextColor(foreground);
+    // Initial load
+    loadColors();
 
-    setCardColor(card);
-    setBorderColor(border);
-
-    // Generate random pastel-ish colors for the pie chart
+    // Generate random colors for pie chart
     const randoms = Array.from({ length: 12 }, () =>
       `hsl(${Math.floor(Math.random() * 360)}, 70%, 65%)`
     );
@@ -91,6 +102,8 @@ export default function SpendingByCategoryChart({ data }: Props) {
   const barBackgroundPlugin = {
     id: "custom_background",
     beforeDraw: (chart: any) => {
+      if (!colorsLoaded || !cardColor) return; // Don't draw background until colors are loaded
+      
       const { ctx, chartArea } = chart;
       ctx.save();
       ctx.fillStyle = cardColor;
@@ -122,15 +135,15 @@ export default function SpendingByCategoryChart({ data }: Props) {
                 plugins: {
                   legend: {
                     labels: {
-                      color: textColor,
+                      color: textColor || "#ffffff",
                       boxWidth: 14,
                       padding: 10,
                     },
                   },
                   tooltip: {
-                    backgroundColor: cardColor,
-                    titleColor: textColor,
-                    bodyColor: textColor,
+                    backgroundColor: cardColor || "#1f2937",
+                    titleColor: textColor || "#ffffff",
+                    bodyColor: textColor || "#ffffff",
                   },
                 },
                 maintainAspectRatio: false,
@@ -147,11 +160,11 @@ export default function SpendingByCategoryChart({ data }: Props) {
                 scales: {
                   x: {
                     grid: { color: "oklch(1 0 0 / 0.08)", lineWidth: 0.5 },
-                    ticks: { color: textColor, maxRotation: 40, minRotation: 40 },
+                    ticks: { color: textColor || "#ffffff", maxRotation: 40, minRotation: 40 },
                   },
                   y: {
                     grid: { color: "oklch(1 0 0 / 0.08)", lineWidth: 0.5 },
-                    ticks: { color: textColor },
+                    ticks: { color: textColor || "#ffffff" },
                     beginAtZero: true,
                   },
                 },

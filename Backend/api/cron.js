@@ -126,7 +126,9 @@ const processRecurringItems = async () => {
 
     // Get today in UTC
     const today = new Date();
+    console.log(`🔍 Current UTC date: ${today.toISOString()}`);
     today.setUTCHours(0, 0, 0, 0);
+    console.log(`🔍 Normalized UTC date: ${today.toISOString()}`);
     const todayEnd = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     console.log(`Processing recurring items for UTC date: ${today.toISOString()}`);
@@ -323,3 +325,4 @@ export default async function handler(req, res) {
     });
   }
 }
+

@@ -63,17 +63,9 @@ export function ChatInterface({
     setIsLoading(true);
     setError(null);
 
-    const assistantMessage: ChatMessage = {
-      _id: `assistant-${Date.now()}`,
-      content: '',
-      role: 'assistant',
-      createdAt: new Date().toISOString(),
-      sessionId: session._id
-    };
-
-    setMessages(prev => [...prev, assistantMessage]);
+    
     abortControllerRef.current = new AbortController();
-
+    let assistantMessage: ChatMessage | null = null;
     try {
       const response = await streamAssistantReply(session._id, content);
       if (!response.data) throw new Error('No response data received');
@@ -82,7 +74,8 @@ export function ChatInterface({
       const decoder = new TextDecoder();
       let buffer = '';
       let streamingContent = '';
-      setIsLoading(false);
+      let firstTokenReceived = false; // Track if we've received the first token
+
 
       while (true) {
         if (abortControllerRef.current?.signal.aborted) break;
@@ -102,23 +95,41 @@ export function ChatInterface({
             if (data === '[DONE]') {
               setMessages(prev =>
                 prev.map(msg =>
-                  msg._id === assistantMessage._id
+                  msg._id === assistantMessage!._id
                     ? { ...msg, content: streamingContent.trim() }
                     : msg
                 )
               );
               return;
             }
-
+             // Hide typing indicator on first token
+             if (!firstTokenReceived) {
+              assistantMessage = {
+                _id: `assistant-${Date.now()}`,
+                content: '',
+                role: 'assistant',
+                createdAt: new Date().toISOString(),
+                sessionId: session._id
+              };
+              setIsLoading(false);
+              firstTokenReceived = true;
+            }
             streamingContent += data;
 
-            setMessages(prev =>
-              prev.map(msg =>
-                msg._id === assistantMessage._id
-                  ? { ...msg, content: streamingContent }
-                  : msg
-              )
-            );
+            if (assistantMessage) {
+              setMessages(prev => {
+                const existingIndex = prev.findIndex(msg => msg._id === assistantMessage!._id);
+                if (existingIndex >= 0) {
+                  return prev.map(msg =>
+                    msg._id === assistantMessage!._id
+                      ? { ...msg, content: streamingContent }
+                      : msg
+                  );
+                } else {
+                  return [...prev, { ...assistantMessage!, content: streamingContent }];
+                }
+              });
+            }
 
           } else if (line.startsWith('event: error')) {
             const nextLine = lines[lines.indexOf(line) + 1];
@@ -135,7 +146,7 @@ export function ChatInterface({
       } else {
         setError(err?.response?.data?.error || err?.message || 'Failed to get response. Please try again.');
       }
-      setMessages(prev => prev.filter(msg => msg._id !== assistantMessage._id));
+      setMessages(prev => prev.filter(msg => msg._id !== assistantMessage!._id));
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;

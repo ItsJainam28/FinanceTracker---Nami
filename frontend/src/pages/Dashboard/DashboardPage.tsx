@@ -16,6 +16,7 @@ import DailyTrendChart from "@/components/dashboard/DailyTrendChart";
 import MonthlyComparisonChart from "@/components/dashboard/MonthlyComparisonChart";
 import CumulativeSpendingChart from "@/components/dashboard/CumulativeSpendingChart";
 import { NavigationBar } from "@/components/common/Navigationbar";
+import AddExpenseDialog from "@/components/expense/AddExpenseDialog";
 
 
 export default function DashboardPage() {
@@ -109,6 +110,7 @@ export default function DashboardPage() {
           </Tabs>
         </div>
       </main>
+      <AddExpenseDialog />
     </div>
   );
 }

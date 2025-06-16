@@ -18,11 +18,6 @@ export const navItems = [
     icon: WalletIcon,
   },
   {
-    title: "Categories",
-    url: "/categories",
-    icon: ListIcon,
-  },
-  {
     title: "Expenses",
     url: "/expenses",
     icon: ClipboardListIcon,
@@ -31,5 +26,10 @@ export const navItems = [
     title: "Scheduled",
     url: "/scheduled-expenses",
     icon: CalendarCheckIcon,
+  },
+  {
+    title: "Categories",
+    url: "/categories",
+    icon: ListIcon,
   },
 ]

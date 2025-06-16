@@ -1,4 +1,4 @@
-import { ChevronsUpDown, LogOut, Moon, Sun, Laptop } from "lucide-react";
+import { ChevronsUpDown, LogOut,  } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useTheme } from "@/components/theme-provider";
+
 
 export function NavUser({
   user,
@@ -26,7 +26,7 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
-  const { setTheme } = useTheme();
+
 
   return (
     <SidebarMenu>
@@ -71,21 +71,6 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
-              <Sun className="mr-2 h-4 w-4" />
-              Light
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer">
-              <Moon className="mr-2 h-4 w-4" />
-              Dark
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer">
-              <Laptop className="mr-2 h-4 w-4" />
-              System
-            </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 

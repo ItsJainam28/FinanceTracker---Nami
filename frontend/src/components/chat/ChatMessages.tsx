@@ -22,7 +22,7 @@ export function ChatMessages({ messages, isLoading, error, onRetry }: ChatMessag
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">Start a conversation</h3>
             <p className="text-sm text-muted-foreground">
-              Type a message below to begin chatting with the AI assistant.
+              Type a message below to begin chatting with Nami, your personal Finance Assistant! .
             </p>
           </div>
         </div>

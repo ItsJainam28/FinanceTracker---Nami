@@ -1,6 +1,27 @@
+import { useState, useEffect } from 'react';
 import { Bot } from 'lucide-react';
 
 export function TypingIndicator() {
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  
+  const typingMessages = [
+    "Nami is thinking...",
+    "Nami is retrieving your financial data...",
+    "Nami is analyzing your request...",
+    "Nami is preparing your response...",
+    "Nami is almost ready..."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessageIndex(prev => 
+        prev < typingMessages.length - 1 ? prev + 1 : prev
+      );
+    }, 3000); // Change message every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex justify-start mb-4">
       <div className="flex items-start space-x-3 max-w-[85%] md:max-w-[70%]">
@@ -23,7 +44,9 @@ export function TypingIndicator() {
                 style={{ animationDelay: '0.2s' }}
               ></div>
             </div>
-            <span className="text-xs">AI is typing...</span>
+            <span className="text-xs transition-all duration-300 ease-in-out">
+              {typingMessages[currentMessageIndex]}
+            </span>
           </div>
         </div>
       </div>
