@@ -7,7 +7,7 @@ Styled with **Tailwind CSS** and **shadcn/ui** components, the app offers a resp
 
 ---
 
-#Live App now Available to use!
+# Live App now Available to use!
 
 https://finance-tracker-frontend-topaz.vercel.app/login
 
