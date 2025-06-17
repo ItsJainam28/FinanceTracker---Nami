@@ -7,6 +7,10 @@ Styled with **Tailwind CSS** and **shadcn/ui** components, the app offers a resp
 
 ---
 
+#Live App now Available to use!
+
+https://finance-tracker-frontend-topaz.vercel.app/login
+
 ## ✨ Features
 
 | **Area**               | **Capabilities**                                                                 |
@@ -15,6 +19,7 @@ Styled with **Tailwind CSS** and **shadcn/ui** components, the app offers a resp
 | **Budgets**            | Create single- or multi-category monthly budgets, track % used, auto-rollover    |
 | **Expenses**           | CRUD operations, categorize expenses, auto-match to budgets                     |
 | **Scheduled Expenses** | Automate recurring expenses with cron-based generation                           |
+| **AI Assistant (Nami)** | 	Ask natural language questions to get spending breakdowns, summaries, and tips|
 | **Analytics Dashboard**| Visualize spending with daily spend lines, category pies, budget vs. spent bars, and upcoming bills |
 | **Responsive UI**      | Modern design with cards, tabs, dialogs, and charts (Chart.js + Recharts)        |
 | **API-First Design**   | Clean REST endpoints, modular controllers, middleware, and input validation      |
@@ -26,14 +31,15 @@ Styled with **Tailwind CSS** and **shadcn/ui** components, the app offers a resp
 ```
 finance-tracker/
 ├── backend/                  # Express API
+│   ├── ai-agent/          # Ai Agent
+│   ├── api/          # Cron Jobs
 │   ├── controllers/          # Request handlers
 │   ├── models/               # Mongoose schemas
 │   ├── routes/               # API routes
 │   ├── middleware/           # Authentication & validation
 │   ├── utils/                # Helper functions
-│   ├── cronjobs/             # node-cron jobs for recurring expenses
 │   ├── config/               # Database & environment config
-│   └── server.js             # Entry point
+│   └── index.js             # Entry point
 ├── frontend/                 # Vite + React + TypeScript
 │   ├── src/
 │   │   ├── api/axiosInstance.ts  # Axios setup
@@ -50,7 +56,7 @@ finance-tracker/
 
 ## ⚙️ Tech Stack
 
-- **Backend**: Node.js 18+, Express 5, Mongoose 7, JSON Web Tokens, node-cron
+- **Backend**: Node.js 18+, Express 5, Mongoose 7, JSON Web Tokens, node-cron, Langchain 
 - **Frontend**: Vite, React 18 (TypeScript), Tailwind CSS, shadcn/ui, Radix UI, Chart.js, Recharts, Axios
 - **Database**: MongoDB 6 (Atlas or local)
 
