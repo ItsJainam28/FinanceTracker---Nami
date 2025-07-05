@@ -19,8 +19,9 @@ export default function CategoriesPage() {
 
   const breadcrumbItems = [
     { label: "Home", href: "/dashboard" },
-    { label: "Categories", isCurrentPage: true }
+    { label: "Categories", isCurrentPage: true },
   ];
+
   const fetchCategories = async () => {
     try {
       const res = await api.get("/categories");
@@ -57,12 +58,14 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground ">
-            <NavigationBar items={breadcrumbItems} />
-      <div className="max-w-4xl mx-auto space-y-10">
+    <div className="min-h-screen bg-background text-foreground">
+      <NavigationBar items={breadcrumbItems} />
+
+      {/* Match Dashboard spacing here */}
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
         <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight">Manage Categories</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight">Manage Categories</h1>
+          <p className="text-muted-foreground text-sm">
             Create custom categories to better organize your expenses.
           </p>
         </div>
@@ -70,7 +73,7 @@ export default function CategoriesPage() {
         {/* Add Category Form */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 bg-muted p-8 rounded-xl border border-border shadow-xl"
+          className="space-y-6 bg-muted p-6 rounded-xl border border-border shadow-sm"
         >
           <div>
             <label className="text-sm font-medium">New Category Name</label>
@@ -91,9 +94,11 @@ export default function CategoriesPage() {
 
         {/* Category List */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Your Categories</h2>
+          <h2 className="text-lg font-semibold">Your Categories</h2>
           {categories.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No categories yet. Start by adding one above.</p>
+            <p className="text-sm text-muted-foreground">
+              No categories yet. Start by adding one above.
+            </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {categories.map((c) => (

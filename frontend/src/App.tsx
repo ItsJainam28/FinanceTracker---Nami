@@ -18,6 +18,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { ChatPage } from "./pages/Chat/ChatPage";
 import { ThemeProvider } from "./components/theme-provider";
+import { Analytics} from "@vercel/analytics/react";
 const queryClient = new QueryClient();
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
         </Router>
         <Toaster position="top-right" richColors />
       </QueryClientProvider>
+      <Analytics />
     </ThemeProvider>
   );
 }

@@ -7,29 +7,28 @@ export default function ExpensesPage() {
     { label: "Home", href: "/dashboard" },
     { label: "Expenses", isCurrentPage: true },
   ];
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <NavigationBar items={breadcrumbItems} />
 
-      {/* Container with proper spacing like your dashboard */}
-      <div className="max-w-7xl mx-auto px-4 ">
-
-        <div className="space-y-6">
+      <main className="flex-1 px-4 py-4">
+        <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Transactions</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
             <p className="text-muted-foreground">
               Track and manage your expenses
             </p>
           </div>
 
-          {/* Main Content */}
+          {/* Expense Table */}
           <ExpenseTable />
-
-          {/* Add Expense Dialog */}
-          <AddExpenseDialog />
         </div>
-      </div>
+      </main>
+
+      {/* Add Expense Dialog */}
+      <AddExpenseDialog />
     </div>
   );
 }

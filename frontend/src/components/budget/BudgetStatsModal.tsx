@@ -65,7 +65,11 @@ const formatCurrency = (n: number) =>
     minimumFractionDigits: 2,
   }).format(n);
 
-export default function BudgetStatsModal({ open, onClose, recurringId }: Props) {
+export default function BudgetStatsModal({
+  open,
+  onClose,
+  recurringId,
+}: Props) {
   const [timeline, setTimeline] = useState<Budget[]>([]);
   const [idx, setIdx] = useState(0);
   const [activeTab, setActiveTab] = useState("overview");
@@ -83,7 +87,9 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
     api
       .get<Budget[]>(`/budgets/recurring/${recurringId}/timeline`)
       .then((res) => {
-        const sorted = res.data.sort((a, b) => a.year - b.year || a.month - b.month);
+        const sorted = res.data.sort(
+          (a, b) => a.year - b.year || a.month - b.month
+        );
         setTimeline(sorted);
         const now = new Date();
         const found = sorted.findIndex(
@@ -122,45 +128,68 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-background/80 backdrop-blur-sm" />
         <Dialog.Content className="fixed top-1/2 left-1/2 w-[95%] max-w-4xl h-[90vh] max-h-[800px] -translate-x-1/2 -translate-y-1/2 bg-card text-card-foreground rounded-xl shadow-xl overflow-hidden flex flex-col border border-border">
-          <div className="p-6 border-b border-border flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Budget Analysis</h2>
-            {current && <div className="text-lg text-muted-foreground">{monthName(current.month)} {current.year}</div>}
+          <div className="p-4 sm:p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold">Budget Analysis</h2>
+            {current && (
+              <div className="text-base sm:text-lg text-muted-foreground">
+                {monthName(current.month)} {current.year}
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto px-4 py-2 sm:p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-3 mb-6 bg-muted rounded overflow-hidden">
-                <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsList className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-0 mb-6 bg-muted rounded overflow-hidden">
+                <TabsTrigger
+                  value="overview"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <PieChartIcon className="mr-1 h-4 w-4" /> Overview
                 </TabsTrigger>
-                <TabsTrigger value="categories" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger
+                  value="categories"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <BarChartIcon className="mr-1 h-4 w-4" /> Categories
                 </TabsTrigger>
-                <TabsTrigger value="history" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger
+                  value="history"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <TrendingUpIcon className="mr-1 h-4 w-4" /> History
                 </TabsTrigger>
               </TabsList>
 
+              {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                     { title: "Budgeted", value: stats.amount },
                     { title: "Spent", value: stats.spent },
                     { title: "Remaining", value: stats.remaining },
                   ].map((item) => (
-                    <Card key={item.title} className="bg-card border-l-4 border-border">
+                    <Card
+                      key={item.title}
+                      className="bg-card border-l-4 border-border"
+                    >
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm text-muted-foreground">{item.title}</CardTitle>
+                        <CardTitle className="text-sm text-muted-foreground">
+                          {item.title}
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-3xl font-bold">{formatCurrency(item.value)}</p>
+                        <p className="text-3xl font-bold">
+                          {formatCurrency(item.value)}
+                        </p>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
 
                 <Card>
-                  <CardHeader><CardTitle>Budget Usage</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Budget Usage</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between text-sm font-medium">
                       <span>Progress</span>
@@ -188,9 +217,12 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
                 </Card>
               </TabsContent>
 
+              {/* Categories Tab */}
               <TabsContent value="categories" className="space-y-6">
                 <Card>
-                  <CardHeader><CardTitle>Category Breakdown</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Category Breakdown</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     {stats.categoryBreakdown.map((cat) => {
                       const pct = (cat.spent / cat.amount) * 100;
@@ -198,7 +230,10 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
                         <div key={cat.name} className="mb-4">
                           <div className="flex justify-between text-sm font-medium">
                             <span>{cat.name}</span>
-                            <span>{formatCurrency(cat.spent)} / {formatCurrency(cat.amount)}</span>
+                            <span>
+                              {formatCurrency(cat.spent)} /{" "}
+                              {formatCurrency(cat.amount)}
+                            </span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
                             <div
@@ -220,10 +255,13 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
                 </Card>
               </TabsContent>
 
+              {/* History Tab */}
               <TabsContent value="history" className="space-y-6">
                 <Card>
-                  <CardHeader><CardTitle>Spending History</CardTitle></CardHeader>
-                  <CardContent className="h-80">
+                  <CardHeader>
+                    <CardTitle>Spending History</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-72 sm:h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats.historicalData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
@@ -247,9 +285,14 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
             </Tabs>
           </div>
 
-          <div className="p-4 border-t border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => step(-1)} disabled={idx === 0}>
+          <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between gap-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => step(-1)}
+                disabled={idx === 0}
+              >
                 <ArrowLeftIcon className="h-3 w-3 mr-1" />
                 Prev
               </Button>
@@ -282,13 +325,20 @@ export default function BudgetStatsModal({ open, onClose, recurringId }: Props) 
                 </Popover.Portal>
               </Popover.Root>
 
-              <Button variant="outline" size="sm" onClick={() => step(1)} disabled={idx === timeline.length - 1}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => step(1)}
+                disabled={idx === timeline.length - 1}
+              >
                 Next <ArrowRightIcon className="h-3 w-3 ml-1" />
               </Button>
             </div>
 
             <Dialog.Close asChild>
-              <Button className="bg-primary text-primary-foreground">Close</Button>
+              <Button className="bg-primary text-primary-foreground w-full sm:w-auto">
+                Close
+              </Button>
             </Dialog.Close>
           </div>
         </Dialog.Content>

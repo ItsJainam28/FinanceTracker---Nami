@@ -52,10 +52,12 @@ export default function BudgetPage() {
     endMonth: null as number | null,
     endYear: null as number | null,
   });
+
   const breadcrumbItems = [
     { label: "Home", href: "/dashboard" },
     { label: "Budgets", isCurrentPage: true },
-  ]
+  ];
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -122,88 +124,90 @@ export default function BudgetPage() {
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-background text-foreground ">
-        <NavigationBar items={breadcrumbItems} />
-      <div className="max-w-7xl mx-auto space-y-8">
-        <h1 className="text-3xl font-extrabold">Budgets</h1>
+    <div className="flex-1 min-h-screen bg-background text-foreground">
+      <NavigationBar items={breadcrumbItems} />
+      <main className="px-4 py-4">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <h1 className="text-3xl font-extrabold">Budgets</h1>
 
-        <div className="space-y-4">
-          {budgets.map((b) => (
-            <div
-              key={b._id}
-              className="border border-border rounded-xl p-5 bg-card hover:shadow-xl transition cursor-pointer"
-              onClick={(e) => {
-                if ((e.target as HTMLElement).tagName === "BUTTON") return;
-                setSelected(b);
-              }}
+          <div className="space-y-4">
+            {budgets.map((b) => (
+              <div
+                key={b._id}
+                className="border border-border rounded-xl p-5 bg-card hover:shadow-xl transition cursor-pointer"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).tagName === "BUTTON") return;
+                  setSelected(b);
+                }}
+              >
+                <div className="flex justify-between flex-wrap gap-2">
+                  <div>
+                    <h2 className="text-lg font-bold text-card-foreground">{b.name}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {b.categories
+                        .map((id) => categories.find((c) => c._id === id)?.name ?? "Unknown")
+                        .join(" | ")}
+                    </p>
+                  </div>
+                  <div className="text-sm text-muted-foreground self-center">
+                    {new Date().toLocaleString("default", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <Progress
+                    value={b.currentMonth?.percent || 0}
+                    className="h-3 bg-muted"
+                    indicatorClassName={
+                      (b.currentMonth?.percent || 0) > 100
+                        ? "bg-red-500"
+                        : (b.currentMonth?.percent || 0) > 70
+                        ? "bg-yellow-500"
+                        : "bg-green-500"
+                    }
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {b.currentMonth?.percent?.toFixed(1) || 0}% used — $
+                    {b.currentMonth?.spent?.toFixed(2) || 0} spent
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => setEditingBudget(b)}
+                    className="bg-primary text-primary-foreground hover:bg-primary/80"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => confirmDeactivate(b._id)}
+                    className="bg-muted text-foreground hover:bg-muted/80"
+                  >
+                    Deactivate
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/80"
+              onClick={() => setFormOpen(true)}
             >
-              <div className="flex justify-between">
-                <div className="flex flex-col justify-between">
-                  <h2 className="text-lg font-bold text-card-foreground">{b.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {b.categories
-                      .map((id) => categories.find((c) => c._id === id)?.name ?? "Unknown")
-                      .join(" | ")}
-                  </p>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {new Date().toLocaleString("default", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Progress
-                  value={b.currentMonth?.percent || 0}
-                  className="h-3 bg-muted"
-                  indicatorClassName={
-                    (b.currentMonth?.percent || 0) > 100
-                      ? "bg-red-500"
-                      : (b.currentMonth?.percent || 0) > 70
-                      ? "bg-yellow-500"
-                      : "bg-green-500"
-                  }
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  {b.currentMonth?.percent?.toFixed(1) || 0}% used — $
-                  {b.currentMonth?.spent?.toFixed(2) || 0} spent
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  size="sm"
-                  onClick={() => setEditingBudget(b)}
-                  className="z-10 bg-primary text-primary-foreground hover:bg-primary/80"
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => confirmDeactivate(b._id)}
-                  className="z-10 bg-muted text-foreground hover:bg-muted/80"
-                >
-                  Deactivate
-                </Button>
-              </div>
-            </div>
-          ))}
+              Add Budget
+            </Button>
+          </div>
         </div>
-
-        <div className="flex justify-center">
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/80"
-            onClick={() => setFormOpen(true)}
-          >
-            Add Budget
-          </Button>
-        </div>
-      </div>
+      </main>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="bg-card text-card-foreground border border-border">
+        <DialogContent className="bg-card text-card-foreground border border-border max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Budget</DialogTitle>
           </DialogHeader>
