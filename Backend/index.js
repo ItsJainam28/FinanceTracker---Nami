@@ -34,7 +34,7 @@ const corsOptions = {
     'https://finance-tracker-frontend-git-main-itsjainam28s-projects.vercel.app', // Vercel production URL
     'http://localhost:3000',    // React default (if testing locally)
     'http://localhost:5173',    // Vite default (if testing locally)
-    'finance-tracker-frontend-topaz.vercel.app', // Vercel production URL
+    'https://finance-tracker-frontend-topaz.vercel.app', // Vercel production URL
     'https://finance-tracker-wpod-itsjainam28s-projects.vercel.app'
   ],
   credentials: true,
